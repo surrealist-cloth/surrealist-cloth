@@ -31,18 +31,6 @@ SOURCES += \
     camera/OrbitingCamera.cpp \
     camera/CamtransCamera.cpp \
     camera/QuaternionCamera.cpp \
-    scenegraph/RayCone.cpp \
-    scenegraph/RayCube.cpp \
-    scenegraph/RayCylinder.cpp \
-    scenegraph/RayDisc.cpp \
-    scenegraph/RayInfCone.cpp \
-    scenegraph/RaySphere.cpp \
-    scenegraph/Scene.cpp \
-    scenegraph/OpenGLScene.cpp \
-    scenegraph/SceneTest.cpp \
-    scenegraph/ShapesScene.cpp \
-    scenegraph/SceneviewScene.cpp \
-    scenegraph/RayScene.cpp \
     shapes/Cone.cpp \
     shapes/ConeShell.cpp \
     shapes/Cube.cpp \
@@ -109,7 +97,6 @@ HEADERS += \
     filter/FilterShift.h \
     filter/FilterUtils.h \
     scenegraph/Constants.h \
-    scenegraph/RayCone.h \
     scenegraph/RayCube.h \
     scenegraph/RayCylinder.h \
     scenegraph/RayDisc.h \
