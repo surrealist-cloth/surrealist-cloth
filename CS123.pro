@@ -31,15 +31,6 @@ SOURCES += \
     camera/OrbitingCamera.cpp \
     camera/CamtransCamera.cpp \
     camera/QuaternionCamera.cpp \
-    filter/EdgeDetect.cpp \
-    filter/Filter.cpp \
-    filter/FilterBlur.cpp \
-    filter/FilterGray.cpp \
-    filter/FilterIdentity.cpp \
-    filter/FilterInvert.cpp \
-    filter/FilterScale.cpp \
-    filter/FilterShift.cpp \
-    filter/FilterUtils.cpp \
     scenegraph/RayCone.cpp \
     scenegraph/RayCube.cpp \
     scenegraph/RayCylinder.cpp \

@@ -4,17 +4,8 @@
 #include <memory>
 
 #include "SupportCanvas2D.h"
-#include "brush/ConstantBrush.h"
-#include "brush/LinearBrush.h"
-#include "brush/QuadraticBrush.h"
-#include "brush/SmudgeBrush.h"
-#include "brush/Brush.h"
-
-class RayScene;
 
 class CS123SceneCameraData;
-
-class ConstantBrush;
 
 /**
  * @class Canvas2D
@@ -27,8 +18,6 @@ class Canvas2D : public SupportCanvas2D {
 public:
     Canvas2D();
     virtual ~Canvas2D();
-
-    void setScene(RayScene *scene);
 
     // UI will call this from the button on the "Ray" dock
     void renderImage(CS123SceneCameraData *camera, int width, int height);
@@ -60,17 +49,6 @@ protected:
 private:
 
     void switchBrush();
-
-    std::unique_ptr<RayScene> m_rayScene;
-
-    //TODO: [BRUSH, INTERSECT, RAY] Put your member variables here.
-
-    std::unique_ptr<Brush> m_brush;
-
-    std::unique_ptr<int> m_brushType;
-    std::unique_ptr<int> m_brushRadius;
-    std::unique_ptr<RGBA> m_brushRGBA;
-
 };
 
 #endif // CANVAS2D_H
