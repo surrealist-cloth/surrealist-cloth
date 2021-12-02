@@ -1,122 +1,66 @@
 #include "Scene.h"
 #include "Camera.h"
 #include "CS123ISceneParser.h"
-#include <iostream>
 
-#include "glm/gtx/transform.hpp"
 #include <glm/glm.hpp>
-#include <glm/gtx/string_cast.hpp>
-
+#include <glm/gtx/transform.hpp>
+#include <glm/ext.hpp>
+#include <iostream>
+#include "lib/CS123SceneData.h"
+#include "shapes/ConeShape.h"
+#include "shapes/CubeShape.h"
+#include "shapes/CylinderShape.h"
+#include "shapes/SphereShape.h"
+#include "Settings.h"
+#include <algorithm>
 
 Scene::Scene()
 {
 }
 
-Scene::Scene(Scene &scene) :
-    m_global(std::make_unique<CS123SceneGlobalData>()),
-    m_lights(std::vector<CS123SceneLightData>(scene.m_lights.size())),
-    m_objects(std::vector<SceneObject*>(0))
+Scene::Scene(Scene &scene)
 {
-    // We need to set the global constants to one when we duplicate a scene,
-    // otherwise the global constants will be double counted (squared)
-    CS123SceneGlobalData global = { 1, 1, 1, 1};
-    setGlobal(global);
-
-    // TODO [INTERSECT]
     // Make sure to copy over the lights and the scenegraph from the old scene,
     // as well as any other member variables your new scene will need.
+    m_global = scene.m_global;
     m_lights = scene.m_lights;
-
-    for (SceneObject *obj: scene.m_objects) {
-        SceneObject *newObj = new SceneObject();
-        newObj->cMTM = obj->cMTM;
-        newObj->primitive = obj->primitive;
-        m_objects.push_back(newObj);
-    }
+    m_primitives = scene.m_primitives;
+    m_transformations = scene.m_transformations;
+    m_inverseTransformations = scene.m_inverseTransformations;
+    print();
 }
 
 Scene::~Scene()
 {
     // Do not delete m_camera, it is owned by SupportCanvas3D
-    for (SceneObject *p : m_objects) {
-        delete p;
-    }
-    m_lights.clear();
-    m_objects.clear();
 }
 
 void Scene::parse(Scene *sceneToFill, CS123ISceneParser *parser) {
-    // TODO: load scene into sceneToFill using setGlobal(), addLight(), addPrimitive(), and
+    // load scene into sceneToFill using setGlobal(), addLight(), addPrimitive(), and
     //   finishParsing()
-
+    // load global data
     CS123SceneGlobalData global;
-    CS123SceneLightData light;
-
-    //Task 5: load global data
     parser->getGlobalData(global);
     sceneToFill->setGlobal(global);
 
-    //Task 6: load light data
+    // load light data
+    CS123SceneLightData light;
     for (int i = 0; i < parser->getNumLights(); i++) {
-        //DO NOT ADD NON-POINT lights in the evaluation for now.
         parser->getLightData(i, light);
-        if (light.type == LightType::LIGHT_POINT) {
-           sceneToFill->addLight(light);
-        }
+        sceneToFill->addLight(light);
     }
 
-    //Task 7: load object data
-    sceneToFill->compressSceneGraph(parser->getRootNode(), 0);
+    // load primitives by DFS'ing the node tree
+    CS123ScenePrimitive primitive;
+    glm::mat4x4 transformation(1.0f);
+    Scene::dfsNode(sceneToFill, parser->getRootNode(), transformation);
+    sceneToFill->setupShapes();
 }
 
-void Scene::compressSceneGraph(CS123SceneNode *node, int depth) {
-    compressSceneGraph(node, depth, glm::mat4x4());
-}
-
-void Scene::compressSceneGraph(CS123SceneNode *node,
-                             int depth, glm::mat4x4 cMTM) {
-
-
-    for (CS123SceneTransformation* t: node->transformations) {
-        switch (t->type) {
-         case TransformationType::TRANSFORMATION_TRANSLATE:
-              cMTM = cMTM * glm::translate(t->translate);
-            break;
-         case TransformationType::TRANSFORMATION_SCALE:
-              cMTM = cMTM * glm::scale(t->scale) ;
-            break;
-         case TransformationType::TRANSFORMATION_ROTATE:
-              cMTM = cMTM * glm::rotate(t->angle, t->rotate);
-            break;
-         case TransformationType::TRANSFORMATION_MATRIX:
-              cMTM = cMTM * t->matrix;
-         break;
-        }
-    }
-
-    for (CS123SceneNode *child: node->children) {
-        compressSceneGraph(child, depth ++, cMTM);
-    }
-
-    if (node->primitives.size() >= 1) {
-
-        for (CS123ScenePrimitive *primitive : node->primitives) {
-
-            SceneObject* sceneObject = new SceneObject();
-
-            m_objects.push_back(sceneObject);
-            sceneObject->primitive = primitive;
-
-            sceneObject->cMTM = cMTM;
-        }
-    }
-}
-
-void Scene::addPrimitive(CS123ScenePrimitive *scenePrimitive, glm::mat4x4 matrix) {
-    SceneObject* sceneObject = new SceneObject();
-    m_objects.push_back(sceneObject);
-    sceneObject->primitive = scenePrimitive;
-    sceneObject->cMTM = matrix;
+void Scene::addPrimitive(const CS123ScenePrimitive &scenePrimitive, const glm::mat4x4 &matrix) {
+    m_primitives.push_back(scenePrimitive);
+    m_transformations.push_back(matrix);
+    m_inverseTransformations.push_back(glm::inverse(matrix));
 }
 
 void Scene::addLight(const CS123SceneLightData &sceneLight) {
@@ -124,150 +68,126 @@ void Scene::addLight(const CS123SceneLightData &sceneLight) {
 }
 
 void Scene::setGlobal(const CS123SceneGlobalData &global) {
-    m_global = std::make_unique<CS123SceneGlobalData>(global);
+    m_global = global;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-void Scene::printPrimitives() {
+void Scene::print() {
+    std::cout << "GLOBAL DATA" << std::endl;
+    std::cout << "[Ambient] " << m_global.ka << " | [Diffuse] " << m_global.kd
+              <<" | [Specular] " << m_global.ks << " | [Transparent] " << m_global.kt << std::endl << std::endl;
+    std::cout << "LIGHTS (n=" << m_lights.size() << ")" << std::endl;
+    for (auto& light : m_lights) {
+        switch (light.type) {
+            case LightType::LIGHT_AREA:
+                std::cout << "Area light (" << light.id << "): [color] " << glm::to_string(light.color)
+                          << " | [width] " << light.width << " | [height] " << light.height << std::endl;
+                break;
+            case LightType::LIGHT_DIRECTIONAL:
+                std::cout << "Directional light (" << light.id << "): [color] " << glm::to_string(light.color)
+                          << " | [pos] " << glm::to_string(light.pos) << std::endl;
+                break;
+            case LightType::LIGHT_POINT:
+                std::cout << "Point light (" << light.id << "): [color] " << glm::to_string(light.color)
+                          << " | [dir] " << glm::to_string(light.dir) << std::endl;
+                break;
+            case LightType::LIGHT_SPOT:
+                std::cout << "Spot light (" << light.id << "): [color] " << glm::to_string(light.color)
+                          << " | [radius] " << light.radius << " | [penumbra] " << light.penumbra
+                          << " | [angle] " << light.angle << std::endl;
+                break;
+            default:
+                break;
+        }
+    }
     std::cout << std::endl;
-    std::cout <<" final primitives: "<< std::endl;
 
-    for (SceneObject* sceneObject : m_objects) {
-        switch(sceneObject->primitive->type) {
+    std::cout << "PRIMITIVES (n=" << m_primitives.size() << ")" << std::endl;
+    for (int i = 0; i < m_primitives.size(); i++) {
+        auto& primitive = m_primitives[i];
+        auto& transformation = m_transformations[i];
+
+        switch (primitive.type) {
             case PrimitiveType::PRIMITIVE_CONE:
-                std::cout << "cone : " << glm::to_string(sceneObject->cMTM) << std::endl;
-            break;
-        case PrimitiveType::PRIMITIVE_CUBE:
-            std::cout << "cube : " << glm::to_string(sceneObject->cMTM) << std::endl;
-            break;
-        case PrimitiveType::PRIMITIVE_CYLINDER:
-            std::cout << "cylinder : " << glm::to_string(sceneObject->cMTM) << std::endl;
-            break;
-        case PrimitiveType::PRIMITIVE_TORUS:
-            std::cout << "torus : " << glm::to_string(sceneObject->cMTM) << std::endl;
-            break;
-        case PrimitiveType::PRIMITIVE_SPHERE:
-            std::cout << "sphere : " << glm::to_string(sceneObject->cMTM) << std::endl;
-            break;
-        case PrimitiveType::PRIMITIVE_MESH:
-            std::cout << "mesh : " << glm::to_string(sceneObject->cMTM) << std::endl;
-            break;
+                std::cout << "Cone: [transformation] " << glm::to_string(transformation) << std::endl;
+                break;
+            case PrimitiveType::PRIMITIVE_CUBE:
+                std::cout << "Cube: [transformation] " << glm::to_string(transformation) << std::endl;
+                break;
+            case PrimitiveType::PRIMITIVE_CYLINDER:
+                std::cout << "Cylinder: [transformation] " << glm::to_string(transformation) << std::endl;
+                break;
+            case PrimitiveType::PRIMITIVE_MESH:
+                std::cout << "Mesh: [file] " << primitive.meshfile << " | [transformation] " << glm::to_string(transformation) << std::endl;
+                break;
+            case PrimitiveType::PRIMITIVE_SPHERE:
+                std::cout << "Sphere: [transformation] " << glm::to_string(transformation) << std::endl;
+                break;
+            case PrimitiveType::PRIMITIVE_TORUS:
+                std::cout << "TORUS: [transformation] " << glm::to_string(transformation) << std::endl;
+                break;
+            default:
+                break;
         }
     }
-
-}
-
-void Scene::printNode(CS123SceneNode *node, int numOffset) {
-    printNode(node, numOffset, std::make_unique<std::string>(""));
-}
-
-void Scene::printNode(CS123SceneNode *node, int numOffset, std::unique_ptr<std::string> name) {
     std::cout << std::endl;
-    std::string offset(numOffset * 4, ' ');
+}
 
-    std::cout << offset << *name << " node:" << std::endl;
-
-    std::cout << offset << "transformations : " << std::endl;
-    for (CS123SceneTransformation *t : node->transformations) {
-        switch (t->type) {
-         case 0:
-             std::cout << offset << "  translate: " << glm::to_string(t->translate) << std::endl;
-            break;
-         case 1:
-            std::cout << offset << "  scale: " << glm::to_string(t->scale) << std::endl;
-            break;
-         case 2:
-            std::cout << offset << "  rotate: " << glm::to_string(t->rotate) << std::endl;
-            std::cout << offset << "  angle: " << t->angle << std::endl;
-            break;
-         case 3:
-            std::cout << offset << "  matrix: " << glm::to_string(t->matrix)  << std::endl;
-         break;
+void Scene::dfsNode(Scene *sceneToFill, CS123SceneNode *node, glm::mat4x4 matrix) {
+    // accumulate the node's transformations
+    for (CS123SceneTransformation* transformation : node->transformations) {
+        switch (transformation->type) {
+            case TRANSFORMATION_TRANSLATE:
+                matrix = glm::translate(matrix, transformation->translate);
+                break;
+            case TRANSFORMATION_ROTATE:
+                matrix = glm::rotate(matrix, transformation->angle, transformation->rotate);
+                break;
+            case TRANSFORMATION_SCALE:
+                matrix = glm::scale(matrix, transformation->scale);
+                break;
+            case TRANSFORMATION_MATRIX:
+                matrix = transformation->matrix * matrix;
+                break;
+            default:
+                std::cerr << "Unrecognized transformation type " << transformation->type << std::endl;
         }
     }
-    std::cout << offset << "children : " << node->children.size() << std::endl;
 
-    std::cout << offset << "primitives of size : " << std::to_string(node->primitives.size()) << std::endl;
-    for (CS123ScenePrimitive *t : node->primitives) {
+    // add all primitives
+    for (CS123ScenePrimitive* primitive : node->primitives) {
+        sceneToFill->addPrimitive(*primitive, matrix);
+    }
 
-        switch(t->type) {
+    // dfs the children
+    for (CS123SceneNode* child : node->children) {
+        dfsNode(sceneToFill, child, matrix);
+    }
+}
+
+void Scene::setupShapes()
+{
+    m_shapes.clear();
+    for (auto& primitive : m_primitives) {
+        std::unique_ptr<OpenGLShape> shape = std::make_unique<OpenGLShape>();
+        switch (primitive.type) {
             case PrimitiveType::PRIMITIVE_CONE:
-                std::cout << offset << "type : cone" << std::endl;
-            break;
-        case PrimitiveType::PRIMITIVE_CUBE:
-            std::cout << offset << "type : cube" << std::endl;
-            break;
-        case PrimitiveType::PRIMITIVE_CYLINDER:
-            std::cout << offset << "type : cylinder" << std::endl;
-            break;
-        case PrimitiveType::PRIMITIVE_TORUS:
-            std::cout << offset << "type : torus" << std::endl;
-            break;
-        case PrimitiveType::PRIMITIVE_SPHERE:
-            std::cout << offset << "type : sphere" << std::endl;
-            break;
-        case PrimitiveType::PRIMITIVE_MESH:
-            std::cout << offset << "type : mesh" << std::endl;
-            break;
+                shape->loadShape(std::make_unique<ConeShape>(std::max(3, settings.shapeParameter2), std::max(1, settings.shapeParameter1)));
+                break;
+            case PrimitiveType::PRIMITIVE_CUBE:
+                shape->loadShape(std::make_unique<CubeShape>(std::max(1, settings.shapeParameter1)));
+                break;
+            case PrimitiveType::PRIMITIVE_CYLINDER:
+                shape->loadShape(std::make_unique<CylinderShape>(std::max(3, settings.shapeParameter2), std::max(1, settings.shapeParameter1)));
+                break;
+            case PrimitiveType::PRIMITIVE_SPHERE:
+                shape->loadShape(std::make_unique<SphereShape>(std::max(3, settings.shapeParameter2), std::max(2, settings.shapeParameter1)));
+                break;
+            default:
+                std::cerr << "Unimplemented shape type" << std::endl;
+                break;
         }
-        std::cout << offset << "  meshfile: " << t->meshfile << std::endl;
-        std::cout << offset << "  material: k_d" << glm::to_string(t->material.cDiffuse) << std::endl;
-    }
-}
-
-void Scene::printInfo() const {
-    std::cout << "Printing Scene information: " << std::endl;
-    std::cout << std::endl;
-
-    std::cout << "  Globaldata " << std::endl;
-    std::cout << "      ambient   coef : "<< m_global->ka << std::endl;
-    std::cout << "      diffuse   coef : "<< m_global->kd << std::endl;
-    std::cout << "      specular  coef : "<< m_global->ks << std::endl;
-    std::cout << "      trnsprncy coef : "<< m_global->kt << std::endl;
-    std::cout << std::endl;
-
-    std::cout << "  Lightdata " << std::endl;
-    for (int i = 0; i < m_lights.size(); i++) {
-        std::cout << "      light " << m_lights[i].id << std::endl;
-
-        printLightType(m_lights[i].type);
-
-        std::cout << "          color    : "<< glm::to_string(m_lights[i].color) << std::endl;
-        std::cout << "          function : "<< glm::to_string(m_lights[i].function) << std::endl;
-        std::cout << "          pos      : "<< glm::to_string(m_lights[i].pos) << std::endl;
-        std::cout << "          dir      : "<< glm::to_string(m_lights[i].dir) << std::endl;
-        std::cout << "          radius   : "<< m_lights[i].radius << std::endl;
-        std::cout << "          penumbra : "<< m_lights[i].penumbra << std::endl;
-        std::cout << "          angle    : "<< m_lights[i].angle << std::endl;
-        std::cout << "          width    : "<< m_lights[i].width << std::endl;
-        std::cout << "          height   : "<< m_lights[i].height << std::endl;
-    }
-}
-
-void Scene::printLightType(LightType l) const {
-    switch (l) {
-        case LightType::LIGHT_POINT:
-            std::cout << "          type     : point light"<< std::endl;
-        break;
-        case LightType::LIGHT_DIRECTIONAL:
-            std::cout << "          type     : directional light"<< std::endl;
-        break;
-        case LightType::LIGHT_SPOT:
-            std::cout << "          type     : spot light"<< std::endl;
-            break;
-        case LightType::LIGHT_AREA:
-            std::cout << "          type     :  area light"<< std::endl;
-        break;
+        if (shape->isLoaded()) {
+            m_shapes.push_back(std::move(shape));
+        }
     }
 }

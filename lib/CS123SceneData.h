@@ -9,14 +9,13 @@
 
 #include <vector>
 #include <string>
-
+#include <QImage>
+#include <QColor>
+#include <iostream>
 #include "glm/glm.hpp"
 
 enum class LightType {
-    LIGHT_POINT,
-    LIGHT_DIRECTIONAL,
-    LIGHT_SPOT,
-    LIGHT_AREA
+    LIGHT_POINT, LIGHT_DIRECTIONAL, LIGHT_SPOT, LIGHT_AREA
 };
 
 enum class PrimitiveType {
@@ -30,10 +29,7 @@ enum class PrimitiveType {
 
 // Enumeration for types of transformations that can be applied to objects, lights, and cameras.
 enum TransformationType {
-   TRANSFORMATION_TRANSLATE,
-    TRANSFORMATION_SCALE,
-    TRANSFORMATION_ROTATE,
-    TRANSFORMATION_MATRIX
+   TRANSFORMATION_TRANSLATE, TRANSFORMATION_SCALE, TRANSFORMATION_ROTATE, TRANSFORMATION_MATRIX
 };
 
 template <typename Enumeration>
@@ -70,10 +66,14 @@ struct CS123SceneLightData {
    float angle;         // Only applicable to spot lights
 
    float width, height; // Only applicable to area lights
+
+   float attenuate(float d) const {
+       return glm::min(1.f,
+                       1 / (function.x + d * function.y + d * d * function.z));
+   }
 };
 
 // Data for scene camera
-// Gets passed into Canvas2D::renderImage(Camera, width, height);
 struct CS123SceneCameraData {
    glm::vec4 pos;
    glm::vec4 look;
@@ -93,6 +93,26 @@ struct CS123SceneFileMap {
    std::string filename;
    float repeatU;
    float repeatV;
+   QImage image;
+
+   void open(std::string f) {
+       filename = f;
+       image.load(QString::fromStdString(f));
+       isUsed = true;
+   }
+
+   glm::vec4 getPixel(float u, float v) const {
+       if (image.isNull()) {
+           return glm::vec4(1, 1, 1, 0);
+       }
+       int x = static_cast<int>(u * repeatU * image.width()) % image.width();
+       int y = static_cast<int>(v * repeatV * image.height()) % image.height();
+       QRgb pixel = image.pixel(x, y);
+       return glm::vec4(static_cast<float>(qRed(pixel)) / 255.f,
+                        static_cast<float>(qGreen(pixel)) / 255.f,
+                        static_cast<float>(qBlue(pixel)) / 255.f,
+                        1.f);
+   }
 
    void clear() {
        isUsed = false;
@@ -107,7 +127,7 @@ struct CS123SceneMaterial {
    // This field specifies the diffuse color of the object. This is the color you need to use for
    // the object in sceneview. You can get away with ignoring the other color values until
    // intersect and ray.
-   // CS123SceneMaterial() {}
+//   CS123SceneMaterial() {}
    CS123SceneColor cDiffuse;
    
    CS123SceneColor cAmbient;
@@ -144,11 +164,6 @@ struct CS123ScenePrimitive {
    PrimitiveType type;
    std::string meshfile;     // Only applicable to meshes
    CS123SceneMaterial material;
-};
-
-struct CS123TransformedPrimitive {
-    CS123ScenePrimitive &primitive;
-    glm::mat4x4 &cMTM;
 };
 
 // Data for transforming a scene object. Aside from the TransformationType, the remaining of the

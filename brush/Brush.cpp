@@ -6,10 +6,10 @@
  * You should fill this file in while completing the Brush assignment.
  */
 
-#include <iostream>
-#include <cmath>
 #include "Brush.h"
 #include "Canvas2D.h"
+#include <algorithm>
+#include <cmath>
 
 static unsigned char lerp(unsigned char a, unsigned char b, float percent) {
     float fa = static_cast<float>(a) / 255.0f;
@@ -22,7 +22,6 @@ static unsigned char lerp(unsigned char a, unsigned char b, float percent) {
 Brush::Brush(RGBA color, int radius) :
     // Pro-tip: Initialize all variables in the initialization list
     m_color(color),
-    m_mask(std::vector<float>((radius*2+1)*(radius*2+1))),
     m_radius(radius)
 {
     // Pro-tip: By the time you get to the constructor body, all of the
@@ -34,7 +33,7 @@ Brush::~Brush()
 {
     // Pro-tip: The destructor (here) is where you free all the resources
     // you allocated during the lifetime of the class
-    // Pro-tip: If you use std::unique_ptr or std::vector, you probably
+    // Pro-tip: If you use std::unique_ptr or std::vector, you probabably
     // won't need to put anything in here.
 }
 
@@ -87,80 +86,55 @@ void Brush::setRadius(int radius) {
     makeMask();
 }
 
-float Brush::getMaskValue(int i) {
-    return m_mask[i];
+int Brush::blendColors(int originalColor, int newColor, float maskRatio, int alpha) {
+    float alphaRatio = alpha / 255.f;
+    return int(originalColor * (1 - maskRatio * alphaRatio) + newColor * maskRatio * alphaRatio);
 }
 
-void Brush::brushDragged(int mouseX, int mouseY, Canvas2D* canvas) {
+void Brush::blend(RGBA* original, float maskRatio) {
+    original->r = blendColors(original->r, getRed(), maskRatio, getAlpha());
+    original->g = blendColors(original->g, getGreen(), maskRatio, getAlpha());
+    original->b = blendColors(original->b, getBlue(), maskRatio, getAlpha());
+}
 
-    RGBA *pix = canvas->data();
+void Brush::blend(RGBA* original, RGBA* paint, float maskRatio) {
+    original->r = blendColors(original->r, paint->r, maskRatio, paint->a);
+    original->g = blendColors(original->g, paint->g, maskRatio, paint->a);
+    original->b = blendColors(original->b, paint->b, maskRatio, paint->a);
+}
 
+RGBA Brush::blend(RGBA original, float maskRatio) {
+    blend(&original, maskRatio);
+    return original;
+}
 
-    int maskRowCounter = - std::min(mouseY - m_radius, 0);
-    int maskColCounter = - std::min(mouseX - m_radius, 0);
-
-    int rowStart = std::max(0, mouseY - m_radius);
-    int rowEnd = std::min(canvas->height(), mouseY + m_radius + 1);
-
-    int colStart = std::max(0, mouseX - m_radius);
-    int colEnd = std::min(canvas->width(), mouseX + m_radius +1);
-
-    for (int rowCounter = rowStart; rowCounter < rowEnd; rowCounter++) {
-        for (int colCounter = colStart; colCounter < colEnd; colCounter++) {
-
-            std::unique_ptr<RGBA> canvasPixel =
-                    std::make_unique<RGBA>(pix[canvas->width() * rowCounter + colCounter]);
-
-            float m = getMaskValue(maskRowCounter * (2 * m_radius + 1) + maskColCounter);
-
-            pix[canvas->width() * rowCounter + colCounter] = blend(m, *canvasPixel, m_color);
-
-            maskColCounter++;
-        }
-
-        maskColCounter = - std::min(mouseX - m_radius, 0);
-        maskRowCounter++;
+void Brush::brushDown(int x, int y, Canvas2D *canvas, bool fixAlphaBlending) {
+    if (!fixAlphaBlending) {
+        return;
     }
+    m_alphas.resize(canvas->width() * canvas->height());
+    std::fill(m_alphas.begin(), m_alphas.end(), 0.f);
+    m_canvas = std::vector<RGBA>(canvas->data(), canvas->data() + canvas->width() * canvas->height());
+}
 
+void Brush::brushDragged(int mouseX, int mouseY, Canvas2D* canvas, bool fixAlphaBlending) {
+    if (fixAlphaBlending && m_alphas.size() == 0) {
+        brushDown(mouseX, mouseY, canvas, fixAlphaBlending);
+    }
+    RGBA* pix = canvas->data();
+    for (int row = std::max(0, mouseY - getRadius()); row < std::min(canvas->height(), mouseY + getRadius() + 1); row++) {
+        for (int col = std::max(0, mouseX - getRadius()); col < std::min(canvas->width(), mouseX + getRadius() + 1); col++) {
+            if (pow(col - mouseX, 2) + pow(row - mouseY, 2) < pow(getRadius(), 2)) {
+                float maskRatio = m_mask[abs(row - mouseY) * getRadius() + abs(col - mouseX)];
+                if (fixAlphaBlending) {
+                    maskRatio = std::min(maskRatio + m_alphas[row * canvas->width() + col], 1.f);
+                    pix[row * canvas->width() + col] = blend(m_canvas[row * canvas->width() + col], maskRatio);
+                    m_alphas[row * canvas->width() + col] = maskRatio;
+                } else {
+                    blend(&pix[row * canvas->width() + col], maskRatio);
+                }
+            }
+        }
+    }
     canvas->update();
-}
-
-RGBA Brush::blend(float mask, RGBA canvasColor, RGBA brushColor) {
-
-      //converting canvasColor.rgb fron RGBA to (0, 1)
-      float canvasRed = static_cast<float>(canvasColor.r) / 255.0f;
-      float canvasGreen = static_cast<float>(canvasColor.g) / 255.0f;
-      float canvasBlue = static_cast<float>(canvasColor.b) / 255.0f;
-
-      float brushRed = static_cast<float>(brushColor.r) / 255.0f;
-      float brushGreen = static_cast<float>(brushColor.g) / 255.0f;
-      float brushBlue = static_cast<float>(brushColor.b) / 255.0f;
-      float alpha = static_cast<float>(brushColor.a) / 255.0f;
-
-
-      //blend and convert back to RGBA
-    RGBA finalColor = RGBA(
-
-               255 * ((1.0f - mask * alpha) * canvasRed
-                    + mask * alpha * brushRed),
-
-                255 * ((1.0f - mask * alpha) * canvasGreen
-                    + mask * alpha * brushGreen),
-
-               255 * ((1.0f - mask * alpha) * canvasBlue
-                    + mask * alpha * brushBlue),
-                255
-                );
-
-    return finalColor;
-}
-
-
-void Brush::printMask() {
-    for (int i = 0; i < 2 * (m_radius + 1); i++) {
-        for (int j = 0; j < 2* (m_radius + 1); j++) {
-                std::cout << m_mask[i * (2 * m_radius + 1) + j];
-        }
-        std::cout << std::endl;
-    }
 }

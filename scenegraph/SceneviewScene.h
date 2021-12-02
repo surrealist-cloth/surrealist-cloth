@@ -4,8 +4,8 @@
 #include "OpenGLScene.h"
 
 #include <memory>
+#include "Settings.h"
 
-#include "shapes/OpenGLShape.h"
 
 namespace CS123 { namespace GL {
 
@@ -43,41 +43,30 @@ public:
 
 private:
 
-
-private:
-
     void loadPhongShader();
     void loadWireframeShader();
     void loadNormalsShader();
     void loadNormalsArrowShader();
 
+    void setGlobalData();
     void setSceneUniforms(SupportCanvas3D *context);
-    void setPhongSceneUniforms(SupportCanvas3D *context, CS123SceneMaterial material);
-
     void setMatrixUniforms(CS123::GL::Shader *shader, SupportCanvas3D *context);
-    void setLights(const glm::mat4 viewMatrix);
-
-    void renderGeometry(SupportCanvas3D *context);
-
-    void clearLights();
-    void initializeSceneMaterial();
-
-
-    void renderPhongPass(SupportCanvas3D *context);
-
-    void renderWireframePass(SupportCanvas3D *context);
-    void renderGeometryAsWireframe();
-    void renderGeometryAsFilledPolygons();
-    void renderNormalsPass (SupportCanvas3D *context);
-
-    CS123SceneMaterial initializeScenMaterial();
-
-    std::unique_ptr<OpenGLShape> m_shape;
+    void setLights();
+    void renderGeometry(std::unique_ptr<CS123::GL::Shader> &shader);
+    void renderGeometry(std::unique_ptr<CS123::GL::CS123Shader> &shader);
 
     std::unique_ptr<CS123::GL::CS123Shader> m_phongShader;
     std::unique_ptr<CS123::GL::Shader> m_wireframeShader;
     std::unique_ptr<CS123::GL::Shader> m_normalsShader;
     std::unique_ptr<CS123::GL::Shader> m_normalsArrowShader;
+    void renderPhongPass(SupportCanvas3D *context);
+    void renderWireframePass(SupportCanvas3D *context);
+    void renderNormalsPass(SupportCanvas3D *context);
+
+    void useWireframe();
+    void useFill();
+
+    Settings m_lastSettings;
 };
 
 #endif // SCENEVIEWSCENE_H

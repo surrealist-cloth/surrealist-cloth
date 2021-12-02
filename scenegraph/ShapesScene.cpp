@@ -5,13 +5,13 @@
 #include <QFileDialog>
 
 #include <sstream>
-#include <iostream>
 
-#include "shapes/ExampleShape.h"
-#include "shapes/Cube.h"
-#include "shapes/Cylinder.h"
-#include "shapes/Cone.h"
-#include "shapes/Sphere.h"
+#include "shapes/OpenGLShape.h"
+#include "shapes/CubeShape.h"
+#include "shapes/CylinderShape.h"
+#include "shapes/SphereShape.h"
+#include "shapes/ConeShape.h"
+#include <iostream>
 
 using namespace CS123::GL;
 #include "gl/shaders/CS123Shader.h"
@@ -20,7 +20,7 @@ using namespace CS123::GL;
 #include "ResourceLoader.h"
 
 ShapesScene::ShapesScene(int width, int height) :
-    m_shape(nullptr),
+    m_shape(std::make_unique<OpenGLShape>()),
     m_width(width),
     m_height(height)
 {
@@ -32,7 +32,7 @@ ShapesScene::ShapesScene(int width, int height) :
     loadNormalsArrowShader();
 
     //TODO: [SHAPES] Allocate any additional memory you need...
-
+    this->settingsChanged();
 }
 
 ShapesScene::~ShapesScene()
@@ -89,9 +89,9 @@ void ShapesScene::loadNormalsArrowShader() {
 void ShapesScene::render(SupportCanvas3D *context) {
     // Clear the screen in preparation for the next frame. (Use a gray background instead of a
     // black one for drawing wireframe or normals so they will show up against the background.)
-    setClearColor(); // 1
+    setClearColor();
 
-    renderPhongPass(context); // 2 thru
+    renderPhongPass(context);
 
     if (settings.drawWireframe) {
         renderWireframePass(context);
@@ -102,37 +102,35 @@ void ShapesScene::render(SupportCanvas3D *context) {
     }
 }
 
-void ShapesScene::renderPhongPass(SupportCanvas3D *context) { // 2 thru 5
-    m_phongShader->bind(); // 2
+void ShapesScene::renderPhongPass(SupportCanvas3D *context) {
+    m_phongShader->bind();
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 3
-    clearLights(); // 4
-
-    setLights(context->getCamera()->getViewMatrix()); // 5
-
-
-    setMatrixUniforms(m_phongShader.get(), context); // 8
-    setPhongSceneUniforms(); // 6  and 7 // light arrow unif, apply material
-    renderGeometryAsFilledPolygons(); // 9
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    clearLights();
+    setLights(context->getCamera()->getViewMatrix());
+    setPhongSceneUniforms();
+    setMatrixUniforms(m_phongShader.get(), context);
+    renderGeometryAsFilledPolygons();
 
     m_phongShader->unbind();
 }
 
 void ShapesScene::setPhongSceneUniforms() {
-    m_phongShader->setUniform("useLighting", settings.useLighting); // 6.1
-    m_phongShader->setUniform("useArrowOffsets", false); // 6.2
-    m_phongShader->applyMaterial(m_material); // 7
+    m_phongShader->setUniform("useLighting", settings.useLighting);
+    m_phongShader->setUniform("useArrowOffsets", false);
+    m_phongShader->setUniform("isShapeScene", true);
+    m_phongShader->applyMaterial(m_material);
 }
 
 void ShapesScene::setMatrixUniforms(Shader *shader, SupportCanvas3D *context) {
-    shader->setUniform("p", context->getCamera()->getProjectionMatrix()); // 8.1
-    shader->setUniform("v", context->getCamera()->getViewMatrix()); // 8.2
+    shader->setUniform("p", context->getCamera()->getProjectionMatrix());
+    shader->setUniform("v", context->getCamera()->getViewMatrix());
     shader->setUniform("m", glm::mat4(1.0f));
 }
 
 void ShapesScene::renderGeometryAsFilledPolygons() {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL); // 9.1
-    renderGeometry(); // 9.2
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    renderGeometry();
 }
 
 void ShapesScene::renderWireframePass(SupportCanvas3D *context) {
@@ -161,14 +159,11 @@ void ShapesScene::renderNormalsPass (SupportCanvas3D *context) {
     m_normalsArrowShader->unbind();
 }
 
-
 void ShapesScene::renderGeometry() {
     if (m_shape) {
-        m_shape->draw(); // 9.2
+        m_shape->draw();
     }
 }
-
-
 
 void ShapesScene::clearLights() {
     for (int i = 0; i < MAX_NUM_LIGHTS; i++) {
@@ -179,32 +174,39 @@ void ShapesScene::clearLights() {
     }
 }
 
-void ShapesScene::setLights(const glm::mat4 viewMatrix) { // 5
+void ShapesScene::setLights(const glm::mat4 viewMatrix) {
     // YOU DON'T NEED TO TOUCH THIS METHOD, unless you want to do fancy lighting...
 
-    // check status of m_light & compare with light
     m_light.dir = glm::inverse(viewMatrix) * m_lightDirection;
 
     clearLights();
     m_phongShader->setLight(m_light);
-
 }
 
 void ShapesScene::settingsChanged() {
-    // TODO: [SHAPES] Fill this in, for now default to an example shape
-    switch (settings.shapeType) {
-        case 0:
-            m_shape = std::make_unique<Cube>(settings.shapeParameter1, settings.shapeParameter2);
-        break;
-        case 1:
-            m_shape = std::make_unique<Cone>(settings.shapeParameter1, settings.shapeParameter2);
-        break;
-        case 2:
-            m_shape = std::make_unique<Sphere>(settings.shapeParameter1, settings.shapeParameter2);
-        break;
-        case 3:
-            m_shape = std::make_unique<Cylinder>(settings.shapeParameter1, settings.shapeParameter2);
-        break;
+    if (settings.shapeParameter1 != m_lastSettings.shapeParameter1 ||
+            settings.shapeParameter2 != m_lastSettings.shapeParameter2 ||
+            settings.shapeParameter3 != m_lastSettings.shapeParameter3 ||
+            settings.shapeType != m_lastSettings.shapeType) {
+        std::cout << "Settings changed. Generating shapes" << std::endl;
+        // reinitialize the shape
+        switch (settings.shapeType) {
+            case SHAPE_CUBE:
+                m_shape->loadShape(std::make_unique<CubeShape>(std::max(1, settings.shapeParameter1)));
+                break;
+            case SHAPE_CONE:
+                m_shape->loadShape(std::make_unique<ConeShape>(std::max(3, settings.shapeParameter2), std::max(1, settings.shapeParameter1)));
+                break;
+            case SHAPE_SPHERE:
+                m_shape->loadShape(std::make_unique<SphereShape>(std::max(3, settings.shapeParameter2), std::max(2, settings.shapeParameter1)));
+                break;
+            case SHAPE_CYLINDER:
+                m_shape->loadShape(std::make_unique<CylinderShape>(std::max(3, settings.shapeParameter2), std::max(1, settings.shapeParameter1)));
+                break;
+            default:
+                std::cerr << "Shape type " << settings.shapeType << " not implemented" << std::endl;
+        }
     }
+    m_lastSettings = settings;
 }
 

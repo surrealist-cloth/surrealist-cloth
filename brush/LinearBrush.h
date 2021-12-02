@@ -17,7 +17,6 @@ public:
     LinearBrush(RGBA color, int radius);
     virtual ~LinearBrush();
 
-    virtual void brushDown(int x, int y, Canvas2D *canvas) {}
     virtual void brushUp(int x, int y, Canvas2D *canvas) {}
 
 protected:

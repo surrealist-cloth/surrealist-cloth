@@ -4,8 +4,16 @@
 #include <memory>
 
 #include "SupportCanvas2D.h"
+#include "Brush.h"
+#include "Settings.h"
+#include "RGBA.h"
+#include <glm/glm.hpp>
+#include "ishapes/IShape.h"
 
+class RayScene;
 class CS123SceneCameraData;
+
+#define VIEWPLANE_DEPTH 1.0
 
 /**
  * @class Canvas2D
@@ -18,6 +26,8 @@ class Canvas2D : public SupportCanvas2D {
 public:
     Canvas2D();
     virtual ~Canvas2D();
+
+    void setScene(RayScene *scene);
 
     // UI will call this from the button on the "Ray" dock
     void renderImage(CS123SceneCameraData *camera, int width, int height);
@@ -47,8 +57,14 @@ protected:
 
 
 private:
+    void renderPixel(CS123SceneCameraData *camera, const glm::mat4& invCameraTransformation, int row, int col, RGBA* pix);
+    glm::vec4 renderPixel(Ray& ray, int maxRecursion);
 
-    void switchBrush();
+    std::unique_ptr<RayScene> m_rayScene;
+    //TODO: [BRUSH, INTERSECT, RAY] Put your member variables here.
+    std::unique_ptr<Brush> m_brush;
+    Settings m_lastSettings;
+    volatile bool m_isRendering;
 };
 
 #endif // CANVAS2D_H

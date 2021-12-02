@@ -38,15 +38,6 @@ public:
     // Returns the current 'look' vector for this camera.
     glm::vec4 getLook() const;
 
-    // Returns the current U unit vector for this camera.
-    glm::vec4 getU() const;
-
-    // Returns the current V unit vector for this camera.
-    glm::vec4 getV() const;
-
-    // Returns the current W unit vector for this camera.
-    glm::vec4 getW() const;
-
     // Returns the current 'up' vector for this camera (the 'V' vector).
     glm::vec4 getUp() const;
 
@@ -56,15 +47,16 @@ public:
     // Returns the currently set height angle.
     float getHeightAngle() const;
 
+    glm::vec4 getU() const;
+    glm::vec4 getV() const;
+    glm::vec4 getW() const;
+
     // Move this camera to a new eye position, and orient the camera's axes given look and up
     // vectors.
     void orientLook(const glm::vec4 &eye, const glm::vec4 &look, const glm::vec4 &up);
 
     // Sets the height angle of this camera.
     void setHeightAngle(float h);
-
-    // Sets the height angle of this camera.
-    void setWidthAngle(float w);
 
     // Translates the camera along a given vector.
     void translate(const glm::vec4 &v);
@@ -81,7 +73,14 @@ public:
     // Sets the near and far clip planes for this camera.
     void setClip(float nearPlane, float farPlane);
 
-protected:
+private:
+    float m_aspectRatio;
+    float m_near, m_far;
+    glm::mat4 m_translationMatrix, m_perspectiveTransformation;
+    glm::mat4 m_scaleMatrix, m_rotationMatrix;
+    float m_thetaH, m_thetaW;
+    glm::vec4 m_eye, m_up;
+    glm::vec4 m_u, m_v, m_w;
 
     void updateProjectionMatrix();
     void updatePerspectiveMatrix();
@@ -89,38 +88,7 @@ protected:
     void updateViewMatrix();
     void updateRotationMatrix();
     void updateTranslationMatrix();
-
-    float m_aspectRatio;
-    float m_near;
-    float m_far;
-
-    glm::mat4 m_translationMatrix;
-    // [1, 0, 0, -Px,
-    //  0, 1, 0, -Py,
-    //  0, 0, 1, -Pz
-    //  0, 0, 0,  1 ]               translation Matrix
-
-    glm::mat4 m_perspectiveTransformation;
-
-    glm::mat4 m_scaleMatrix;
-
-    glm::mat4 m_rotationMatrix;
-    // [u_x, u_y, u_z, 0,
-    //  v_x, v_y, v_z, 0,
-    //  w_x, w_y, w_z, 0,
-    //  0, 0, 0,  1 ]              rotationMatrix
-
-    float m_thetaH; // in
-    float m_thetaW;
-
-    glm::vec4 m_eye;
-    glm::vec4 m_up;
-
-    glm::vec4 m_u;
-    glm::vec4 m_v;
-    glm::vec4 m_w;
-
-    glm::vec4 m_look;
+    glm::mat4 rotate(glm::vec3 axis, float angle);
 
 };
 

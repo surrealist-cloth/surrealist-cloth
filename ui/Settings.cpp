@@ -25,7 +25,7 @@ Settings settings;
  */
 void Settings::loadSettingsOrDefaults() {
     // Set the default values below
-    QSettings s("CS123", "CS123");
+    QSettings s("CS123", "surrealist-cloth");
 
     // Brush
     brushType = s.value("brushType", BRUSH_LINEAR).toInt();
@@ -85,7 +85,7 @@ void Settings::loadSettingsOrDefaults() {
 }
 
 void Settings::saveSettings() {
-    QSettings s("CS123", "CS123");
+    QSettings s("CS123", "surrealist-cloth");
 
     // Brush
     s.setValue("brushType", brushType);

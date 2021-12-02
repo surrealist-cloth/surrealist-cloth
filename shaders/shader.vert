@@ -8,9 +8,14 @@ layout(location = 10) in float arrowOffset; // Sideways offset for billboarded n
 out vec3 color; // Computed color for this vertex
 out vec2 texc;
 
+// global data
+uniform float ka;
+uniform float kd;
+uniform float ks;
+
 // Transformation matrices
-uniform mat4 p; // projection
-uniform mat4 v; // view
+uniform mat4 p;
+uniform mat4 v;
 uniform mat4 m;
 
 // Light data
@@ -28,6 +33,7 @@ uniform vec3 specular_color;
 uniform float shininess;
 uniform vec2 repeatUV;
 
+uniform bool isShapeScene;
 uniform bool useLighting;     // Whether to calculate lighting using lighting equation
 uniform bool useArrowOffsets; // True if rendering the arrowhead of a normal for Shapes
 
@@ -47,9 +53,15 @@ void main() {
     }
 
     gl_Position = p * position_cameraSpace;
+    float a= 1.f, d = 1.f, s = 1.f;
+    if (!isShapeScene) {
+        a = ka;
+        d = kd;
+        s = ks;
+    }
 
     if (useLighting) {
-        color = ambient_color.xyz; // Add ambient component
+        color = ambient_color.xyz*a; // Add ambient component
 
         for (int i = 0; i < MAX_LIGHTS; i++) {
             vec4 vertexToLight = vec4(0);
@@ -63,13 +75,13 @@ void main() {
 
             // Add diffuse component
             float diffuseIntensity = max(0.0, dot(vertexToLight, normal_cameraSpace));
-            color += max(vec3(0), lightColors[i] * diffuse_color * diffuseIntensity);
+            color += max(vec3(0), lightColors[i] * diffuse_color * diffuseIntensity)*d;
 
             // Add specular component
             vec4 lightReflection = normalize(-reflect(vertexToLight, normal_cameraSpace));
             vec4 eyeDirection = normalize(vec4(0,0,0,1) - position_cameraSpace);
             float specIntensity = pow(max(0.0, dot(eyeDirection, lightReflection)), shininess);
-            color += max (vec3(0), lightColors[i] * specular_color * specIntensity);
+            color += max (vec3(0), lightColors[i] * specular_color * specIntensity)*s;
         }
     } else {
         color = ambient_color + diffuse_color;

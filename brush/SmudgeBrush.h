@@ -14,8 +14,8 @@ public:
     SmudgeBrush(RGBA color, int radius);
     virtual ~SmudgeBrush();
 
-    virtual void brushDown(int x, int y, Canvas2D *canvas);
-    virtual void brushDragged(int x, int y, Canvas2D *canvas);
+    virtual void brushDown(int x, int y, Canvas2D *canvas, bool fixAlphaBlending = false);
+    virtual void brushDragged(int x, int y, Canvas2D *canvas, bool fixAlphaBlending = false);
     virtual void brushUp(int x, int y, Canvas2D *canvas);
 
 protected:
@@ -23,11 +23,8 @@ protected:
     void makeMask();
 
     //! Copy paint in the bounding box of the brush from canvas to m_paint
-    void pickUpPaint(int mouseX, int mouseY, Canvas2D* canvas);
-    std::vector<RGBA> m_canvasPaint;
-
-private:
-    std::vector<RGBA> m_buffer;
+    void pickUpPaint(int x, int y, Canvas2D* canvas);
+    std::vector<RGBA> m_paint;
 };
 
 #endif

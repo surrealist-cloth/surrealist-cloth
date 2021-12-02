@@ -48,7 +48,7 @@ public:
 
 protected:
     // Set the light uniforms for the lights in the scene. (The view matrix is used so that the
-    // light can follow the camera.)
+    // light can follows the camera.)
     virtual void setLights(const glm::mat4 viewMatrix);
 
     // Render geometry for Shapes and Sceneview.
@@ -69,6 +69,7 @@ private:
     glm::vec4 m_lightDirection = glm::normalize(glm::vec4(1.f, -1.f, -1.f, 0.f));
 
     std::unique_ptr<OpenGLShape> m_shape;
+    Settings m_lastSettings;
 
     int m_width;
     int m_height;

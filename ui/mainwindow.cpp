@@ -11,10 +11,7 @@
 #include <math.h>
 #include <QFileDialog>
 #include <QMessageBox>
-
-#include "scenegraph/SceneTest.h"
-
-#include <iostream>
+#include <QThreadPool>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -34,8 +31,11 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->setCurrentWidget(ui->tab2D);
     ui->tabWidget->setCurrentWidget(ui->tab3D);
 
+    // set thread count
+    QThreadPool::globalInstance()->setMaxThreadCount(THREAD_COUNT);
+
     // Restore the UI settings
-    QSettings qtSettings("CS123", "CS123");
+    QSettings qtSettings("CS123", "surrealist-cloth");
     restoreGeometry(qtSettings.value("geometry").toByteArray());
     restoreState(qtSettings.value("windowState").toByteArray());
 
@@ -109,6 +109,7 @@ MainWindow::MainWindow(QWidget *parent) :
     show();
     ui->tabWidget->setCurrentWidget(widget);
     show();
+
 }
 
 MainWindow::~MainWindow()
@@ -258,7 +259,7 @@ void MainWindow::changeEvent(QEvent *e) {
 void MainWindow::closeEvent(QCloseEvent *event) {
     // Save the settings before we quit
     settings.saveSettings();
-    QSettings qtSettings("CS123", "CS123");
+    QSettings qtSettings("CS123", "surrealist-cloth");
     qtSettings.setValue("geometry", saveGeometry());
     qtSettings.setValue("windowState", saveState());
 
@@ -315,11 +316,11 @@ void MainWindow::fileNew() {
 }
 
 void MainWindow::fileOpen() {
-    // This opens the 3D tab to initialize OGL so parsing   // Question: What is OGL?
+    // This opens the 3D tab to initialize OGL so parsing
     // the scene doesn't crash. If you can find a better solution
     // feel free to change this.
     activateCanvas3D();
-    QString file = QFileDialog::getOpenFileName(this, QString(), "/course/cs123/data/");
+    QString file = QFileDialog::getOpenFileName(this, QString(), "~");
     if (!file.isNull()) {
         if (file.endsWith(".xml")) {
             m_sceneParser = std::unique_ptr<CS123XmlSceneParser>(new CS123XmlSceneParser(file.toLatin1().data()));
@@ -385,9 +386,6 @@ void MainWindow::filterImage() {
 void MainWindow::renderImage() {
     // Make sure OpenGL gets a chance to update the OrbitCamera, which can only be done when
     // that tab is active (because it needs the OpenGL context for its matrix transforms)
-
-    std::cout << " RENDER IMAGE HAS BEEN CALLED " << std::endl;
-
     ui->tabWidget->setCurrentIndex(TAB_3D);
     m_canvas3D->update();
     QApplication::processEvents();
@@ -396,6 +394,8 @@ void MainWindow::renderImage() {
 
     OpenGLScene *glScene = m_canvas3D->getScene();
     if (glScene && m_sceneParser) {
+        // Set up RayScene from glScene and call ui->canvas2D->setScene()
+        ui->canvas2D->setScene(new RayScene(*glScene)); // it's safe to use new here because setScene transfers ownership to a unique_ptr
 
         // Disable the UI so the user can't interfere with the raytracing
         setAllEnabled(false);
@@ -406,12 +406,11 @@ void MainWindow::renderImage() {
 
         // Render the image
         QSize activeTabSize = ui->tabWidget->currentWidget()->size();
-        //ui->canvas2D->renderImage(m_canvas3D->getCamera(), activeTabSize.width(), activeTabSize.height());
-
-        // INTERSECT, 2Dcanvas render image
+        // ui->canvas2D->renderImage(m_canvas3D->getCamera(), activeTabSize.width(), activeTabSize.height());
         CS123SceneCameraData camera;
         m_sceneParser->getCameraData(camera);
         ui->canvas2D->renderImage(&camera, activeTabSize.width(), activeTabSize.height());
+        ui->canvas2D->update();
 
         // Swap the "stop rendering" button for the "render" button
         ui->rayRenderButton->setHidden(false);

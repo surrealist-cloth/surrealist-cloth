@@ -282,10 +282,9 @@ bool parseColor(const QDomElement &color, CS123SceneColor &c) {
 bool parseMap(const QDomElement &e, CS123SceneFileMap &map) {
     if (!e.hasAttribute("file"))
         return false;
-    map.filename = e.attribute("file").toStdString();
     map.repeatU = e.hasAttribute("u") ? e.attribute("u").toFloat() : 1;
     map.repeatV = e.hasAttribute("v") ? e.attribute("v").toFloat() : 1;
-    map.isUsed = true;
+    map.open(e.attribute("file").toStdString());
     return true;
 }
 

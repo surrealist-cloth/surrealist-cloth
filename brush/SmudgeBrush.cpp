@@ -9,23 +9,18 @@
 #include "SmudgeBrush.h"
 
 #include "Canvas2D.h"
-
+#include <algorithm>
+#include <cmath>
 
 SmudgeBrush::SmudgeBrush(RGBA color, int radius) :
-    QuadraticBrush(color, radius),
-    m_canvasPaint(std::vector<RGBA>((radius*2+1)*(radius*2+1)))
+    QuadraticBrush(color, radius)
 {
-    // @TODO: [BRUSH] Initialize any memory you are going to use here. Hint - you are going to
-    //       need to store temporary image data in memory. Remember to use automatically managed memory!
-
     makeMask();
 }
 
 
 SmudgeBrush::~SmudgeBrush()
 {
-    // @TODO: [BRUSH] Be sure not to leak memory!  If you're using automatic memory management everywhere,
-    //       this will be empty.
 }
 
 void SmudgeBrush::brushUp(int x, int y, Canvas2D* canvas) {
@@ -34,94 +29,51 @@ void SmudgeBrush::brushUp(int x, int y, Canvas2D* canvas) {
 
 //! create a mask with a distribution of your choice (probably want to use quadratic for best results)
 void SmudgeBrush::makeMask() {
-    // @TODO: [BRUSH] Set up the mask for your brush here. For this brush you will probably want
-    //        to use a quadratic distribution for the best results. Linear or Gaussian would
-    //        work too, however. Feel free to paste your code from the Linear or Quadratic brushes
-    //        or modify the class inheritance to be able to take advantage of one of those class's
-    //        existing implementations. The choice is yours!
-    //
+    QuadraticBrush::makeMask();
 }
 
-void SmudgeBrush::brushDown(int x, int y, Canvas2D *canvas) {
+void SmudgeBrush::brushDown(int x, int y, Canvas2D *canvas, bool fixAlphaBlending) {
     pickUpPaint(x, y, canvas);
 }
 
 //! Picks up paint from the canvas before drawing begins.
-void SmudgeBrush::pickUpPaint(int mouseX, int mouseY, Canvas2D* canvas) {
+void SmudgeBrush::pickUpPaint(int x, int y, Canvas2D* canvas) {
+    int width = canvas->width();
+    int height = canvas->height();
 
-    m_canvasPaint = std::vector<RGBA>((m_radius*2+1)*(m_radius*2+1));
-
-    RGBA *pix = canvas->data();
-
-    int maskRowCounter = - std::min(mouseY - m_radius, 0);
-    int maskColCounter = - std::min(mouseX - m_radius, 0);
-
-    std::unique_ptr<int> rowStart = std::make_unique<int> (
-                std::max(0, mouseY - m_radius));
-    std::unique_ptr<int> rowEnd = std::make_unique<int> (
-                std::min(canvas->height(), mouseY + m_radius + 1));
-
-    std::unique_ptr<int> colStart = std::make_unique<int> (
-                std::max(0, mouseX - m_radius));
-    std::unique_ptr<int> colEnd = std::make_unique<int> (
-                std::min(canvas->width(), mouseX + m_radius +1));
-
-    for (int rowCounter = *rowStart; rowCounter < *rowEnd; rowCounter++) {
-
-        for (int colCounter = *colStart; colCounter < *colEnd; colCounter++) {
-
-            std::unique_ptr<RGBA> canvasPixel =
-                    std::make_unique<RGBA>(pix[canvas->width() * rowCounter + colCounter]);
-
-            m_canvasPaint[maskRowCounter * (2 * m_radius + 1) + maskColCounter] = *canvasPixel;
-
-            maskColCounter++;
+    m_paint.resize(pow(getRadius() * 2 + 1, 2));
+    RGBA* pix = canvas->data();
+    for (int row = 0; row <= getRadius() * 2; row++) {
+        for (int col = 0; col <= getRadius() * 2; col++) {
+            int canvasY = row + y - getRadius();
+            int canvasX = col + x - getRadius();
+            int distanceSquare = pow(canvasY - y, 2) + pow(canvasX - x, 2);
+            if (distanceSquare < pow(getRadius(), 2) &&
+                    (canvasY < height && canvasY >= 0) &&
+                    (canvasX < width && canvasX >= 0)) {
+                m_paint[row * (getRadius() * 2 + 1) + col] = pix[canvasY * width + canvasX];
+            }
         }
-
-        maskColCounter = - std::min(mouseX - m_radius, 0);
-        maskRowCounter++;
     }
 }
 
-void SmudgeBrush::brushDragged(int mouseX, int mouseY, Canvas2D* canvas) {
-
-    RGBA *pix = canvas->data();
-
-
-    int maskRowCounter = - std::min(mouseY - m_radius, 0);
-    int maskColCounter = - std::min(mouseX - m_radius, 0);
-
-    std::unique_ptr<int> rowStart = std::make_unique<int> (
-                std::max(0, mouseY - m_radius));
-    std::unique_ptr<int> rowEnd = std::make_unique<int> (
-                std::min(canvas->height(), mouseY + m_radius + 1));
-
-    std::unique_ptr<int> colStart = std::make_unique<int> (
-                std::max(0, mouseX - m_radius));
-    std::unique_ptr<int> colEnd = std::make_unique<int> (
-                std::min(canvas->width(), mouseX + m_radius +1));
-
-    for (int rowCounter = *rowStart; rowCounter < *rowEnd; rowCounter++) {
-
-        for (int colCounter = *colStart; colCounter < *colEnd; colCounter++) {
-
-            std::unique_ptr<RGBA> canvasPixel =
-                    std::make_unique<RGBA>(pix[canvas->width() * rowCounter + colCounter]);
-
-            float m = getMaskValue(maskRowCounter * (2 * m_radius + 1) + maskColCounter);
-            m_color = m_canvasPaint[maskRowCounter * (2 * m_radius + 1) + maskColCounter];
-
-            pix[canvas->width() * rowCounter + colCounter] = blend(m, *canvasPixel, m_color);
-
-            maskColCounter++;
+void SmudgeBrush::brushDragged(int mouseX, int mouseY, Canvas2D* canvas, bool fixAlphaBlending) {
+    RGBA* pix = canvas->data();
+    for (int row = std::max(0, mouseY - getRadius()); row < std::min(canvas->height(), mouseY + getRadius() + 1); row++) {
+        for (int col = std::max(0, mouseX - getRadius()); col < std::min(canvas->width(), mouseX + getRadius() + 1); col++) {
+            if (pow(col - mouseX, 2) + pow(row - mouseY, 2) < pow(getRadius(), 2)) {
+                int y = row - mouseY + getRadius();
+                int x = col - mouseX + getRadius();
+                blend(&pix[row * canvas->width() + col],
+                        &m_paint[y * (getRadius() * 2 + 1) + x],
+                        m_mask[abs(row - mouseY) * getRadius() + abs(col - mouseX)]);
+            }
         }
-
-        maskColCounter = - std::min(mouseX - m_radius, 0);
-        maskRowCounter++;
     }
 
     canvas->update();
 
+    // now pick up paint again...
     pickUpPaint(mouseX, mouseY, canvas);
 
 }

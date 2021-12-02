@@ -31,12 +31,6 @@ void CS123Shader::applyMaterial(const CS123SceneMaterial &material) {
     setUniform("shininess", material.shininess);
 }
 
-
-// Set scene uniforms
-// Store object that are used every time
-// Dynamic level of detail >> change p1 p2 based on distance from camera
-// dont' need to do any transformations for camera
-
 void CS123Shader::setLight(const CS123SceneLightData &light) {
     bool ignoreLight = false;
 

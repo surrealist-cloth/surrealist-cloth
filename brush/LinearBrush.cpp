@@ -8,13 +8,13 @@
 
 #include "LinearBrush.h"
 
-#include <iostream>
 #include <math.h>
+#include <algorithm>
+#include <cmath>
 
 LinearBrush::LinearBrush(RGBA color, int radius)
     : Brush(color, radius)
 {
-    // @TODO: [BRUSH] You'll probably want to set up the mask right away.
     makeMask();
 }
 
@@ -24,22 +24,13 @@ LinearBrush::~LinearBrush()
 }
 
 void LinearBrush::makeMask() {
-
-    std::unique_ptr<int> maskWidth = std::make_unique<int>(2 * m_radius + 1);
-    std::unique_ptr<int> maskHeight = std::make_unique<int>(2 * m_radius + 1);
-
-    for (int row = 0; row < *maskWidth; row++) {
-        for (int col = 0; col < *maskHeight; col++) {
-
-            if( pow((m_radius + 1), 2) >= (pow(m_radius - row, 2) + pow(m_radius - col, 2)) ) {
-                float maskValue = 1 - (pow(m_radius - row, 2) + pow(m_radius - col, 2)) / pow((m_radius + 1), 2);
-                m_mask[row * (2 * m_radius + 1) + col] = maskValue;
-            } else {
-                m_mask[row * (2 * m_radius + 1) + col] = 0;
-            }
+    m_mask.resize(pow(getRadius(), 2));
+    for (int y = 0; y < getRadius(); y++) {
+        for (int x = 0; x < getRadius(); x++) {
+            float distance = sqrt(pow(x, 2) + pow(y, 2));
+            m_mask[y * getRadius() + x] = std::max(0.f, 1.f - distance / getRadius());
         }
     }
-    //printMask();
 }
 
 

@@ -6,13 +6,14 @@
  * You should fill this file in while completing the Brush assignment.
  */
 
-#include <iostream>
 #include "ConstantBrush.h"
+#include <cmath>
+#include <algorithm>
+#include "Canvas2D.h"
 
 ConstantBrush::ConstantBrush(RGBA color, int radius)
     : Brush(color, radius)
 {
-    // @TODO: [BRUSH] You'll probably want to set up the mask right away.
     makeMask();
 }
 
@@ -20,24 +21,15 @@ ConstantBrush::ConstantBrush(RGBA color, int radius)
 ConstantBrush::~ConstantBrush()
 {
 }
-
 void ConstantBrush::makeMask() {
-
-    std::unique_ptr<int> maskWidth = std::make_unique<int>(2 * m_radius + 1);
-    std::unique_ptr<int> maskHeight = std::make_unique<int>(2 * m_radius + 1);
-
-    for (int row = 0; row < *maskWidth; row++) {
-        for (int col = 0; col < *maskHeight; col++) {
-
-            if( pow((m_radius + 1), 2) >= (pow(m_radius - row, 2) + pow(m_radius - col, 2)) ) {
-                m_mask[row * (2 * m_radius + 1) + col] = 1;
+    m_mask.resize(pow(getRadius(), 2));
+    for (int y = 0; y < getRadius(); y++) {
+        for (int x = 0; x < getRadius(); x++) {
+            if (pow(x, 2) + pow(y, 2) < pow(getRadius(), 2)) {
+                m_mask[y * getRadius() + x] = 1;
             } else {
-                m_mask[row * (2 * m_radius + 1) + col] = 0;
+                m_mask[y * getRadius() + x] = 0;
             }
         }
     }
-
-    //printMask();
 }
-
-

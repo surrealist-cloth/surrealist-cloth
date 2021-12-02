@@ -5,8 +5,9 @@
 #include <glm/glm.hpp>
 #include "GL/glew.h"
 
-#include<memory>
+#include <memory>
 #include <vector>
+#include "Shape.h"
 
 /**
  *
@@ -30,17 +31,16 @@ public:
     OpenGLShape();
     virtual ~OpenGLShape();
     void draw();
-
-    void transform(glm::mat4 mat);
-
-protected:
+    void loadShape(std::unique_ptr<Shape> shape);
+    bool isLoaded();
+private:
     /**
      * initializes the relavant openGL properties for the shape
      * don't worry about what exactly this function is doing, you'll learn more about that later in the course!
      * look at ExampleShape.cpp for it's demonstrated usage
      */
     void initializeOpenGLShapeProperties();
-
+    std::unique_ptr<Shape> m_shape;
     std::vector<GLfloat> m_vertexData;
     std::unique_ptr<CS123::GL::VAO> m_VAO;
 };

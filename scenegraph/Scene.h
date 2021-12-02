@@ -2,20 +2,14 @@
 #define SCENE_H
 
 #include "CS123SceneData.h"
-#include <map>
+#include <vector>
+#include <glm/glm.hpp>
 
 class Camera;
 class CS123ISceneParser;
-
-/**
- * @brief The cMTMPrimitive struct holds a primitive
- * along with its cumulative transformation matrix to be
- * directly transformed to its ultimate position in the scene.
- */
-struct SceneObject {
-    CS123ScenePrimitive *primitive;
-    glm::mat4x4 cMTM; // cumulative transformation matrix for each object
-};
+#include <vector>
+#include <memory>
+#include "shapes/OpenGLShape.h"
 
 /**
  * @class Scene
@@ -33,33 +27,39 @@ public:
 
     static void parse(Scene *sceneToFill, CS123ISceneParser *parser);
 
-    //prints the parsed information (or nothing)
-    void printInfo() const;
+    const CS123SceneGlobalData& getGlobal() { return m_global; }
+    const std::vector<CS123SceneLightData>& getLights() { return m_lights; };
+    const std::vector<CS123ScenePrimitive>& getPrimitives() { return m_primitives; };
+    const std::vector<glm::mat4>& getTransformations() { return m_transformations; };
+    const std::vector<glm::mat4>& getInverseTransformations() { return m_inverseTransformations; };
 
+
+protected:
 
     // Adds a primitive to the scene.
-    virtual void addPrimitive(CS123ScenePrimitive *scenePrimitive, glm::mat4x4  matrix);
+    virtual void addPrimitive(const CS123ScenePrimitive &scenePrimitive, const glm::mat4x4 &matrix);
 
     // Adds a light to the scene.
-    virtual void addLight(const CS123SceneLightData &sceneLight); // this is a referance: here we are talking about type not doing an operation
+    virtual void addLight(const CS123SceneLightData &sceneLight);
 
     // Sets the global data for the scene.
     virtual void setGlobal(const CS123SceneGlobalData &global);
 
-protected:
+    virtual void print();
 
-    std::unique_ptr<CS123SceneGlobalData> m_global;
+    void setupShapes();
+
+    CS123SceneGlobalData m_global;
     std::vector<CS123SceneLightData> m_lights;
-    std::vector<SceneObject*> m_objects; // primitives that all have a CMTM
+    std::vector<CS123ScenePrimitive> m_primitives;
+    std::vector<glm::mat4x4> m_transformations;
+    std::vector<glm::mat4x4> m_inverseTransformations;
+    std::vector<std::unique_ptr<OpenGLShape>> m_shapes;
 
-    void compressSceneGraph(CS123SceneNode* node, int depth);
-    void compressSceneGraph(CS123SceneNode* node,
-                                   int depth, glm::mat4x4 cMTM);
+private:
+    static void dfsNode(Scene* sceneToFill, CS123SceneNode* node, glm::mat4x4 matrix);
 
-    void printPrimitives();
-    void printLightType(LightType l) const;
-    static void printNode(CS123SceneNode *node, int offSet);
-    static void printNode(CS123SceneNode *node, int offSet, std::unique_ptr<std::string> name);
+
 };
 
 #endif // SCENE_H

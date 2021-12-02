@@ -16,7 +16,6 @@ public:
     ConstantBrush(RGBA color, int radius);
     virtual ~ConstantBrush();
 
-    virtual void brushDown(int x, int y, Canvas2D *canvas) {}
     virtual void brushUp(int x, int y, Canvas2D *canvas) {}
 
 protected:

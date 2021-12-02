@@ -11,6 +11,8 @@
 #include <QObject>
 #include "RGBA.h"
 
+#define THREAD_COUNT 16
+
 // Enumeration values for the Brush types from which the user can choose in the GUI.
 enum BrushType {
     BRUSH_CONSTANT,

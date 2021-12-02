@@ -27,7 +27,6 @@ public:
     int getRed() const;
     int getGreen() const;
     int getRadius() const;
-    float getMaskValue(int i);
 
     void setAlpha(int alpha);
     void setBlue(int blue);
@@ -36,8 +35,8 @@ public:
     void setRGBA(const RGBA &rgba);
     void setRadius(int radius);
 
-    virtual void brushDown(int x, int y, Canvas2D* canvas) = 0;
-    virtual void brushDragged(int x, int y, Canvas2D* canvas);
+    virtual void brushDown(int x, int y, Canvas2D* canvas, bool fixAlphaBlending = false);
+    virtual void brushDragged(int x, int y, Canvas2D* canvas, bool fixAlphaBlending = false);
     virtual void brushUp(int x, int y, Canvas2D* canvas) = 0;
 
 
@@ -45,16 +44,18 @@ protected:
     // Pure virtual function that will create the mask distribution.
     // To be be implemented in subclasses.
     virtual void makeMask() = 0;
-    // returns the final intensity given a mask value, and two RGBA colors
-    RGBA blend(float mask, RGBA canvasColor, RGBA brushColors);
-    //prints the mask to the terminal output
-    void printMask();
 
     // C++ coding convention is to put m_ in front of member variables
     RGBA m_color;
     std::vector<float> m_mask;
     int m_radius;
 
+    std::vector<float> m_alphas;
+    std::vector<RGBA> m_canvas;
+    static int blendColors(int originalColor, int newColor, float maskRatio, int alpha);
+    void blend(RGBA* original, float maskRatio);
+    RGBA blend(RGBA original, float maskRatio);
+    void blend(RGBA* original, RGBA* paint, float maskRatio);
 };
 
 
