@@ -122,12 +122,19 @@ struct CS123SceneFileMap {
    }
 };
 
+enum class MaterialType {
+    MATERIAL_PHONG,
+    MATERIAL_METAL,
+    MATERIAL_GLASS
+};
+
 // Data for scene materials
 struct CS123SceneMaterial {
    // This field specifies the diffuse color of the object. This is the color you need to use for
    // the object in sceneview. You can get away with ignoring the other color values until
    // intersect and ray.
 //   CS123SceneMaterial() {}
+   MaterialType type;
    CS123SceneColor cDiffuse;
    
    CS123SceneColor cAmbient;
@@ -135,6 +142,9 @@ struct CS123SceneMaterial {
    CS123SceneColor cSpecular;
    CS123SceneColor cTransparent;
    CS123SceneColor cEmissive;
+   CS123SceneColor eta; // for glass
+   float r0; // for glass and metal
+   float roughness; // for metal
 
    CS123SceneFileMap textureMap;
    float blend;
@@ -143,20 +153,21 @@ struct CS123SceneMaterial {
 
    float shininess;
 
-   float ior; // index of refraction
-
    void clear() {
+       type = MaterialType::MATERIAL_PHONG;
        cAmbient.r = 0.0f; cAmbient.g = 0.0f; cAmbient.b = 0.0f; cAmbient.a = 0.0f;
        cDiffuse.r = 0.0f; cDiffuse.g = 0.0f; cDiffuse.b = 0.0f; cDiffuse.a = 0.0f;
        cSpecular.r = 0.0f; cSpecular.g = 0.0f; cSpecular.b = 0.0f; cSpecular.a = 0.0f;
        cReflective.r = 0.0f; cReflective.g = 0.0f; cReflective.b = 0.0f; cReflective.a = 0.0f;
        cTransparent.r = 0.0f; cTransparent.g = 0.0f; cTransparent.b = 0.0f; cTransparent.a = 0.0f;
        cEmissive.r = 0.0f; cEmissive.g = 0.0f; cEmissive.b = 0.0f; cEmissive.a = 0.0f;
+       eta.r = 0.0f; eta.g = 0.0f; eta.b = 0.0f; eta.a = 0.0f;
+       r0 = 0.f;
+       roughness = 0.f;
        textureMap.clear();
        bumpMap.clear();
        blend = 0.0f;
        shininess = 0.0f;
-       ior = 0.0;
    }
 };
 

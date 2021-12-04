@@ -289,6 +289,26 @@ bool parseMap(const QDomElement &e, CS123SceneFileMap &map) {
 }
 
 /**
+ * Helper function to parse a material tag. Example tag:
+ * <material type="glass"/>
+ */
+bool parseMaterial(const QDomElement &mat, MaterialType &type) {
+    if (!mat.hasAttribute("type"))
+        return false;
+    std::string typeName = mat.attribute("type").toStdString();
+    if (typeName == "phong") {
+        type = MaterialType::MATERIAL_PHONG;
+    } else if (typeName == "glass") {
+        type = MaterialType::MATERIAL_GLASS;
+    } else if (typeName == "metal") {
+        type = MaterialType::MATERIAL_METAL;
+    } else {
+        return false;
+    }
+    return true;
+}
+
+/**
  * Parse a <globaldata> tag and fill in m_globalData.
  */
 bool CS123XmlSceneParser::parseGlobalData(const QDomElement &globaldata) {
@@ -686,9 +706,13 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
     CS123SceneMaterial& mat = primitive->material;
     mat.clear();
     primitive->type = PrimitiveType::PRIMITIVE_CUBE;
+    mat.type = MaterialType::MATERIAL_PHONG;
     mat.textureMap.isUsed = false;
     mat.bumpMap.isUsed = false;
     mat.cDiffuse.r = mat.cDiffuse.g = mat.cDiffuse.b = 1;
+    mat.r0 = 0.8;
+    mat.eta.r = 0.79; mat.eta.g = 0.8; mat.eta.b = 0.81;
+
     node->primitives.push_back(primitive);
 
     // Parse primitive type
@@ -749,8 +773,8 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
                 PARSE_ERROR(e);
                 return false;
             }
-        } else if (e.tagName() == "ior") {
-            if (!parseSingle(e, mat.ior, "v")) {
+        } else if (e.tagName() == "eta") {
+            if (!parseColor(e, mat.eta)) {
                 PARSE_ERROR(e);
                 return false;
             }
@@ -766,6 +790,21 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
             }
         } else if (e.tagName() == "blend") {
             if (!parseSingle(e, mat.blend, "v")) {
+                PARSE_ERROR(e);
+                return false;
+            }
+        } else if (e.tagName() == "material") {
+            if (!parseMaterial(e, mat.type)) {
+                PARSE_ERROR(e);
+                return false;
+            }
+        } else if (e.tagName() == "roughness") {
+            if (!parseSingle(e, mat.roughness, "v")) {
+                PARSE_ERROR(e);
+                return false;
+            }
+        } else if (e.tagName() == "r0") {
+            if (!parseSingle(e, mat.r0, "v")) {
                 PARSE_ERROR(e);
                 return false;
             }

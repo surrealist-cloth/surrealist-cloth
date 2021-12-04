@@ -129,14 +129,31 @@ glm::vec3 RayScene::rayTrace(Ray &ray, int maxRecursion)
 
     glm::vec3 color = illuminate(*s, ray.eye);
 
-    // recurse to calculate reflection if allowed
-    if ((maxRecursion > 1) &&
-            // we calculate the maximum possible contribution at this point by assuming the incoming light from reflection is pure white
-            (glm::length(color + glm::vec3(getGlobal().ks * s->primitive.material.cReflective)) > MIN_INTENSITY ||
-             maxRecursion == MAX_RECURSION)) {
-        Ray reflectedRay(s->intersection + s->normal * EPSILON, glm::reflect(ray.dir, s->normal));
-        color += glm::vec3(getGlobal().ks * s->primitive.material.cReflective * glm::vec4(rayTrace(reflectedRay, maxRecursion - 1), 1.f));
+    if (maxRecursion > 1) {
+        switch (s->primitive.material.type) {
+            case MaterialType::MATERIAL_PHONG:
+                color = recursePhong(color, ray, *s, maxRecursion - 1);
+                break;
+            case MaterialType::MATERIAL_METAL:
+                break;
+            case MaterialType::MATERIAL_GLASS:
+                break;
+        }
     }
+
+
+    return color;
+}
+
+glm::vec3 RayScene::recursePhong(glm::vec3 color, Ray &ray, ShapeIntersection &s, int maxRecursion)
+{
+    Ray reflectedRay(s.intersection + s.normal * EPSILON, glm::reflect(ray.dir, s.normal));
+    glm::vec3 reflectedColor = glm::vec3(getGlobal().ks * s.primitive.material.cReflective * glm::vec4(rayTrace(reflectedRay, maxRecursion - 1), 1.f));
+    return color + reflectedColor;
+}
+
+glm::vec3 RayScene::recurseMetal(glm::vec3 color, Ray &ray, ShapeIntersection &s, int maxRecursion)
+{
     return color;
 }
 
@@ -194,6 +211,11 @@ std::unique_ptr<ShapeIntersection> RayScene::intersect(Ray& ray)
     glm::vec3 intersection = ray.getPoint(matchT);
     glm::vec3 normal = normalPointer ? *normalPointer : glm::vec3(0, 1, 0);
     normal = glm::normalize(glm::transpose(glm::mat3(invTransformations[matchI])) * normal);
+    // if the normal and the ray form an acute angle, then we should flip the normal, since
+    // the ray is coming from the inside of the object
+    if (glm::dot(ray.dir, normal) > 0) {
+        normal = -normal;
+    }
 
     return std::make_unique<ShapeIntersection>(matchT, intersection, normal, primitives[matchI], m_ishapes[matchI], invTransformations[matchI]);
 }

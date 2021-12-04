@@ -16,3 +16,6 @@ qrc_resources.cpp
 *.mak
 
 *.plist
+*.app
+surrealist-cloth
+surrealist-cloth.app

@@ -34,6 +34,8 @@ public:
     glm::vec3 rayTrace(Ray& ray);
 private:
     glm::vec3 rayTrace(Ray& ray, int maxRecursion);
+    glm::vec3 recursePhong(glm::vec3 color, Ray &ray, ShapeIntersection &s, int maxRecursion);
+    glm::vec3 recurseMetal(glm::vec3 color, Ray &ray, ShapeIntersection &s, int maxRecursion);
     glm::vec4 getTexture(ShapeIntersection& s);
     bool isOccluded(Ray& lightRay, ShapeIntersection& s, float maxT);
     glm::vec3 illuminate(ShapeIntersection& s, glm::vec3 pos);
