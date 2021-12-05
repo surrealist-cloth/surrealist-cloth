@@ -143,15 +143,15 @@ void Canvas2D::setScene(RayScene *scene) {
     m_rayScene.reset(scene);
 }
 
-void Canvas2D::renderPixel(CS123SceneCameraData *camera, const glm::mat4& invCameraTransformation, int row, int col, RGBA* pix)
+void Canvas2D::renderPixel(CS123SceneCameraData *camera, const glm::mat4& invCameraTransformation, int row, int col, int width, int height, std::vector<RGBA>& pix)
 {
     if (!m_isRendering) return;
     Ray ray(glm::vec3(0),
-            m_rayScene->getViewplaneCoords(camera, this->width(), this->height(), VIEWPLANE_DEPTH, row, col));
+            m_rayScene->getViewplaneCoords(camera, width, height, VIEWPLANE_DEPTH, row, col));
     ray.transform(invCameraTransformation);
 
     glm::vec3 color = m_rayScene->rayTrace(ray);
-    pix[row * this->width() + col] = RGBA(glm::min(255, static_cast<int>(color.x * 255)),
+    pix[row * width + col] = RGBA(glm::min(255, static_cast<int>(color.x * 255)),
                                           glm::min(255, static_cast<int>(color.y * 255)),
                                           glm::min(255, static_cast<int>(color.z * 255)),
                                           255);
@@ -161,34 +161,47 @@ void Canvas2D::renderImage(CS123SceneCameraData *camera, int width, int height) 
     if (m_rayScene) {
         m_isRendering = true;
         resize(width, height);
-        RGBA* pix = data();
+        std::vector<RGBA> superPix;
+        int superWidth = width * settings.numSuperSamples;
+        int superHeight = height * settings.numSuperSamples;
+        superPix.resize(superWidth * superHeight);
+
         glm::mat4 invCameraTransformation = glm::inverse(m_rayScene->getCameraTransformation(camera));
 
         // concurrency if enabled
         if (settings.useMultiThreading) {
             QList<int> cols;
 
-            for (int col = 0; col < this->width(); col++) {
+            for (int col = 0; col < superWidth; col++) {
                 cols.push_back(col);
             }
 
-            for (int row = 0; row < this->height(); row++) {
+            for (int row = 0; row < superHeight; row++) {
                 QtConcurrent::blockingMap(cols, [&](int col) {
-                    renderPixel(camera, invCameraTransformation, row, col, pix);
+                    renderPixel(camera, invCameraTransformation, row, col, superWidth, superHeight, superPix);
                 });
                 QCoreApplication::processEvents();
             }
 
         } else {
-            for (int row = 0; row < this->height(); row++) {
-                for (int col = 0; col < this->width(); col++) {
-                    renderPixel(camera, invCameraTransformation, row, col, pix);
+            for (int row = 0; row < superHeight; row++) {
+                for (int col = 0; col < superWidth; col++) {
+                    renderPixel(camera, invCameraTransformation, row, col, superWidth, superHeight, superPix);
                 }
                 // If you want the interface to stay responsive, make sure to call
                 // QCoreApplication::processEvents() periodically during the rendering.
                 QCoreApplication::processEvents();
             }
         }
+
+        // scale down
+        if (settings.numSuperSamples == 1) {
+            memcpy(data(), superPix.data(), width * height * sizeof(RGBA));
+        } else {
+            ScaleFilter filter(1.f / settings.numSuperSamples, 1.f / settings.numSuperSamples);
+            filter.applyRGBA(superPix.data(), data(), superWidth, superHeight);
+        }
+
     }
     m_isRendering = false;
 }

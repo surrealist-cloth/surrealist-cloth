@@ -57,7 +57,7 @@ protected:
 
 
 private:
-    void renderPixel(CS123SceneCameraData *camera, const glm::mat4& invCameraTransformation, int row, int col, RGBA* pix);
+    void renderPixel(CS123SceneCameraData *camera, const glm::mat4& invCameraTransformation, int row, int col, int width, int height, std::vector<RGBA>& pix);
     glm::vec4 renderPixel(Ray& ray, int maxRecursion);
 
     std::unique_ptr<RayScene> m_rayScene;
