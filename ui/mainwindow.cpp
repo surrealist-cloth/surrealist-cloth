@@ -320,7 +320,7 @@ void MainWindow::fileOpen() {
     // the scene doesn't crash. If you can find a better solution
     // feel free to change this.
     activateCanvas3D();
-    QString file = QFileDialog::getOpenFileName(this, QString(), "~");
+    QString file = QFileDialog::getOpenFileName(this, QString(), "/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data");
     if (!file.isNull()) {
         if (file.endsWith(".xml")) {
             m_sceneParser = std::unique_ptr<CS123XmlSceneParser>(new CS123XmlSceneParser(file.toLatin1().data()));

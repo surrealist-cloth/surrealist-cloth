@@ -11,7 +11,9 @@ struct Ray {
     glm::vec3 eye;
     glm::vec3 dir;
 
-    Ray(glm::vec3 eye, glm::vec3 dir) : eye(eye), dir(dir) {}
+    Ray(glm::vec3 eye, glm::vec3 dir, float moveEpsilon = 0.f) : eye(eye), dir(glm::normalize(dir)) {
+        this->eye += dir * moveEpsilon;
+    }
     Ray(const Ray &ray) : eye(ray.eye), dir(ray.dir) {}
 
     void transform(glm::mat4 transformation) {
@@ -53,8 +55,9 @@ struct ShapeIntersection {
     const CS123ScenePrimitive primitive;
     const IShape& ishape;
     const glm::mat4 invTransformation;
+    bool isInside;
 
-    ShapeIntersection(float t, glm::vec3& intersection, glm::vec3& normal, const CS123ScenePrimitive& primitive, const IShape& ishape, const glm::mat4& invTransformation): t(t), intersection(intersection), normal(normal), primitive(primitive), ishape(ishape), invTransformation(invTransformation) {}
+    ShapeIntersection(float t, glm::vec3& intersection, glm::vec3& normal, const CS123ScenePrimitive& primitive, const IShape& ishape, const glm::mat4& invTransformation, bool isInside): t(t), intersection(intersection), normal(normal), primitive(primitive), ishape(ishape), invTransformation(invTransformation), isInside(isInside) {}
 };
 
 

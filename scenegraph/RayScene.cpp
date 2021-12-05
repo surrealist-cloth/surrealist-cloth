@@ -94,8 +94,7 @@ glm::vec3 RayScene::illuminate(ShapeIntersection& s, glm::vec3 pos)
         glm::vec3 v = glm::normalize(pos - s.intersection);
         glm::vec3 r = glm::reflect(l, s.normal);
         // ray trace to see if the path to the light source is blocked by the object itself
-        glm::vec3 eye = s.intersection + s.normal * EPSILON;
-        Ray lightRay(eye, -l);
+        Ray lightRay(s.intersection, -l, EPSILON);
 
         if (!isOccluded(lightRay, s, distance)) {
             // add texture if enabled
@@ -127,16 +126,17 @@ glm::vec3 RayScene::rayTrace(Ray &ray, int maxRecursion)
         return glm::vec3(0, 0, 0);
     }
 
-    glm::vec3 color = illuminate(*s, ray.eye);
-
+    glm::vec3 color;
     if (maxRecursion > 1) {
         switch (s->primitive.material.type) {
             case MaterialType::MATERIAL_PHONG:
-                color = recursePhong(color, ray, *s, maxRecursion - 1);
+                color = renderPhong(ray, *s, maxRecursion - 1);
                 break;
             case MaterialType::MATERIAL_METAL:
+                color = renderMetal(ray, *s, maxRecursion - 1);
                 break;
             case MaterialType::MATERIAL_GLASS:
+                color = renderGlass(ray, *s, maxRecursion - 1);
                 break;
         }
     }
@@ -145,16 +145,37 @@ glm::vec3 RayScene::rayTrace(Ray &ray, int maxRecursion)
     return color;
 }
 
-glm::vec3 RayScene::recursePhong(glm::vec3 color, Ray &ray, ShapeIntersection &s, int maxRecursion)
+glm::vec3 RayScene::renderPhong(Ray &ray, ShapeIntersection &s, int maxRecursion)
 {
-    Ray reflectedRay(s.intersection + s.normal * EPSILON, glm::reflect(ray.dir, s.normal));
-    glm::vec3 reflectedColor = glm::vec3(getGlobal().ks * s.primitive.material.cReflective * glm::vec4(rayTrace(reflectedRay, maxRecursion - 1), 1.f));
+    glm::vec3 color = illuminate(s, ray.eye);
+    Ray reflectedRay(s.intersection, glm::reflect(ray.dir, s.normal), EPSILON);
+    glm::vec3 reflectedColor = glm::vec3(getGlobal().ks * s.primitive.material.cReflective * glm::vec4(rayTrace(reflectedRay, maxRecursion), 1.f));
     return color + reflectedColor;
 }
 
-glm::vec3 RayScene::recurseMetal(glm::vec3 color, Ray &ray, ShapeIntersection &s, int maxRecursion)
+glm::vec3 RayScene::renderMetal(Ray &ray, ShapeIntersection &s, int maxRecursion)
 {
+    glm::vec3 color = illuminate(s, ray.eye);
     return color;
+}
+
+glm::vec3 RayScene::renderGlass(Ray &ray, ShapeIntersection &s, int maxRecursion)
+{
+    Ray reflect(s.intersection, glm::reflect(ray.dir, s.normal), EPSILON);
+    glm::vec3 reflectionColor = rayTrace(reflect, maxRecursion);
+    float ior = s.primitive.material.ior;
+    float eta = s.isInside ? ior : 1.f / ior;
+    Ray refract(s.intersection, glm::refract(ray.dir, s.normal, eta), EPSILON);
+    glm::vec3 refractionColor = rayTrace(refract, maxRecursion);
+    float fresnelCoefficient = fresnel(ior, s.normal, ray.dir);
+
+    return (1.f - fresnelCoefficient) * refractionColor + fresnelCoefficient * reflectionColor;
+}
+
+float RayScene::fresnel(float ior, glm::vec3 normal, glm::vec3 raydir)
+{
+    float r0 = glm::pow((ior - 1.f) / (ior + 1.f), 2.f);
+    return glm::mix(glm::pow(1.f - glm::dot(normal, -raydir), 5.f), 1.f, r0);
 }
 
 glm::vec4 RayScene::getTexture(ShapeIntersection &s)
@@ -213,10 +234,9 @@ std::unique_ptr<ShapeIntersection> RayScene::intersect(Ray& ray)
     normal = glm::normalize(glm::transpose(glm::mat3(invTransformations[matchI])) * normal);
     // if the normal and the ray form an acute angle, then we should flip the normal, since
     // the ray is coming from the inside of the object
-    if (glm::dot(ray.dir, normal) > 0) {
-        normal = -normal;
-    }
+    bool isInside = glm::dot(ray.dir, normal) > 0;
+    if (isInside) normal = -normal;
 
-    return std::make_unique<ShapeIntersection>(matchT, intersection, normal, primitives[matchI], m_ishapes[matchI], invTransformations[matchI]);
+    return std::make_unique<ShapeIntersection>(matchT, intersection, normal, primitives[matchI], m_ishapes[matchI], invTransformations[matchI], isInside);
 }
 
