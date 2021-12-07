@@ -42,6 +42,7 @@ SOURCES += \
     ishapes/EmptyIShape.cpp \
     ishapes/IShape.cpp \
     ishapes/SphereIShape.cpp \
+    ishapes/TriangleIShape.cpp \
     scenegraph/Scene.cpp \
     scenegraph/OpenGLScene.cpp \
     scenegraph/ShapesScene.cpp \
@@ -107,6 +108,7 @@ HEADERS += \
     ishapes/EmptyIShape.h \
     ishapes/IShape.h \
     ishapes/SphereIShape.h \
+    ishapes/TriangleIShape.h \
     scenegraph/Scene.h \
     scenegraph/OpenGLScene.h \
     scenegraph/ShapesScene.h \
