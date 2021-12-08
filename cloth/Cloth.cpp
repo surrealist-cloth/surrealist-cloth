@@ -1,5 +1,9 @@
 #include "Cloth.h"
 
+Cloth::~Cloth() {
+
+}
+
 Cloth::Cloth(int rows, int cols) : m_rows(rows), m_cols(cols)
 {
     // create masses
@@ -22,12 +26,12 @@ Cloth::Cloth(int rows, int cols) : m_rows(rows), m_cols(cols)
             if (i < rows - 1)
             {
                 m_constraints.push_back(
-                    std::make_unique<ClothConstraint>(m_masses[index], m_masses[index + cols], m_stiffness));
+                    std::make_unique<ClothConstraint>(*m_masses[index], *m_masses[index + cols], m_stiffness));
             }
             if (j < cols - 1)
             {
                 m_constraints.push_back(
-                    std::make_unique<ClothConstraint>(m_masses[index], m_masses[index + 1], m_stiffness));
+                    std::make_unique<ClothConstraint>(*m_masses[index], *m_masses[index + 1], m_stiffness));
             }
         }
     }

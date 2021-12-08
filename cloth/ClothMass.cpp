@@ -1,5 +1,9 @@
 #include "ClothMass.h"
 
+ClothMass::~ClothMass() {
+
+}
+
 ClothMass::ClothMass() : m_mass(1.f), m_position(std::make_unique<glm::vec3>())
 {
 }

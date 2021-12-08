@@ -11,7 +11,7 @@ class Cloth
 {
   public:
     Cloth(int rows, int cols);
-    virtual ~Cloth();
+    ~Cloth();
 
   protected:
     int m_rows;
