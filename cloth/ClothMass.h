@@ -16,10 +16,17 @@ class ClothMass
     const glm::vec3 &getPosition();
     void setMass(float mass);
     void setPosition(const glm::vec3 &position);
+    void addForce(const glm::vec3 &force);
+    void setFixed(bool fixed);
+    void offsetPosition(const glm::vec3 &offset);
+    void step(float dt, float damping);
 
   protected:
+    bool m_isFixed;
     float m_mass;
     std::unique_ptr<glm::vec3> m_position;
+    std::unique_ptr<glm::vec3> m_oldPosition;
+    std::unique_ptr<glm::vec3> m_acceleration;
 };
 
 #endif // CLOTHMASS_H

@@ -1,7 +1,7 @@
 #include "Cloth.h"
 
-Cloth::~Cloth() {
-
+Cloth::~Cloth()
+{
 }
 
 Cloth::Cloth(int rows, int cols) : m_rows(rows), m_cols(cols)
@@ -34,5 +34,20 @@ Cloth::Cloth(int rows, int cols) : m_rows(rows), m_cols(cols)
                     std::make_unique<ClothConstraint>(*m_masses[index], *m_masses[index + 1], m_stiffness));
             }
         }
+    }
+}
+
+void Cloth::step()
+{
+    for (int i = 0; i < m_constraintIterations; i++)
+    {
+        for (auto &constraint : m_constraints)
+        {
+            constraint->satisfyConstraint();
+        }
+    }
+    for (auto &mass : m_masses)
+    {
+        mass->step(m_timeStep, m_damping);
     }
 }

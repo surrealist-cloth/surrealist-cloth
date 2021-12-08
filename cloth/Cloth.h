@@ -12,6 +12,7 @@ class Cloth
   public:
     Cloth(int rows, int cols);
     ~Cloth();
+    void step();
 
   protected:
     int m_rows;
@@ -21,8 +22,10 @@ class Cloth
     // constants
     const float m_width = 4.f;
     const float m_height = 4.f;
-    const float m_stiffness = 0.f;
+    const float m_stiffness = 0.1;
     const float m_timeStep = 1.f / 60.f;
+    const float m_damping = 0.1;
+    const int m_constraintIterations = 10;
 };
 
 #endif // CLOTH_H
