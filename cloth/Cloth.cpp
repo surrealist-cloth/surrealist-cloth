@@ -19,20 +19,10 @@ Cloth::Cloth(int rows, int cols) : m_rows(rows), m_cols(cols)
         for (int j = 0; j < cols; j++)
         {
             int index = i * cols + j;
-            if (i > 0)
-            {
-                m_constraints.push_back(
-                    std::make_unique<ClothConstraint>(m_masses[index], m_masses[index - cols], m_stiffness));
-            }
             if (i < rows - 1)
             {
                 m_constraints.push_back(
                     std::make_unique<ClothConstraint>(m_masses[index], m_masses[index + cols], m_stiffness));
-            }
-            if (j > 0)
-            {
-                m_constraints.push_back(
-                    std::make_unique<ClothConstraint>(m_masses[index], m_masses[index - 1], m_stiffness));
             }
             if (j < cols - 1)
             {
