@@ -10,11 +10,13 @@
 struct Ray {
     glm::vec3 eye;
     glm::vec3 dir;
+    int depth;
+    glm::vec4 radiance;
 
-    Ray(glm::vec3 eye, glm::vec3 dir, float moveEpsilon = 0.f) : eye(eye), dir(glm::normalize(dir)) {
+    Ray(glm::vec3 eye, glm::vec3 dir, float moveEpsilon = 0.f, int depth = 0, glm::vec4 radiance = glm::vec4(1.f)) : eye(eye), dir(glm::normalize(dir)), depth(depth), radiance(radiance) {
         this->eye += dir * moveEpsilon;
     }
-    Ray(const Ray &ray) : eye(ray.eye), dir(ray.dir) {}
+    Ray(const Ray &ray) : eye(ray.eye), dir(ray.dir), depth(ray.depth), radiance(ray.radiance) {}
 
     void transform(glm::mat4 transformation) {
         eye = glm::vec3(transformation * glm::vec4(eye, 1));

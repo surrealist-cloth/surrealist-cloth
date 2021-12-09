@@ -710,7 +710,7 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
     mat.textureMap.isUsed = false;
     mat.bumpMap.isUsed = false;
     mat.cDiffuse.r = mat.cDiffuse.g = mat.cDiffuse.b = 1;
-    mat.ior = 1;
+    mat.ior.r = 1.5; mat.ior.g = 1.49; mat.ior.b = 1.48;
 
     node->primitives.push_back(primitive);
 
@@ -773,7 +773,7 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
                 return false;
             }
         } else if (e.tagName() == "ior") {
-            if (!parseSingle(e, mat.ior, "v")) {
+            if (!parseColor(e, mat.ior)) {
                 PARSE_ERROR(e);
                 return false;
             }

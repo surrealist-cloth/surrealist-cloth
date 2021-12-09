@@ -15,7 +15,7 @@
 #include "ishapes/IShape.h"
 
 
-#define MAX_RECURSION 8
+#define MAX_RECURSION 5
 #define MIN_INTENSITY 0.0001
 
 /**
@@ -33,10 +33,9 @@ public:
 
     glm::vec3 rayTrace(Ray& ray);
 private:
-    glm::vec3 rayTrace(Ray& ray, int maxRecursion);
-    glm::vec3 renderPhong(Ray &ray, ShapeIntersection &s, int maxRecursion);
-    glm::vec3 renderMetal(Ray &ray, ShapeIntersection &s, int maxRecursion);
-    glm::vec3 renderGlass(Ray &ray, ShapeIntersection &s, int maxRecursion);
+    glm::vec3 renderPhong(Ray &ray, ShapeIntersection &s);
+    glm::vec3 renderMetal(Ray &ray, ShapeIntersection &s);
+    glm::vec3 renderGlass(Ray &ray, ShapeIntersection &s);
     float fresnel(float ior, glm::vec3 normal, glm::vec3 raydir);
     glm::vec4 getTexture(ShapeIntersection& s);
     bool isOccluded(Ray& lightRay, ShapeIntersection& s, float maxT);

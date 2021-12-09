@@ -14,6 +14,7 @@
 #include <memory>
 #include "RGBA.h"
 #include <limits>
+#include <glm/gtx/extented_min_max.hpp>
 
 RayScene::RayScene(Scene &scene) :
     Scene(scene)
@@ -112,62 +113,64 @@ glm::vec3 RayScene::illuminate(ShapeIntersection& s, glm::vec3 pos)
     return glm::vec3(color);
 }
 
-glm::vec3 RayScene::rayTrace(Ray& ray)
+glm::vec3 RayScene::rayTrace(Ray &ray)
 {
-    int maxRecursion = settings.useReflection ? MAX_RECURSION : 1;
-    return rayTrace(ray, maxRecursion);
-}
+    if (!settings.useReflection || ray.depth == MAX_RECURSION || ray.radiance.a * glm::max(ray.radiance.r, ray.radiance.g, ray.radiance.b) < MIN_INTENSITY) {
+        return glm::vec3(0);
+    }
 
-glm::vec3 RayScene::rayTrace(Ray &ray, int maxRecursion)
-{
     std::unique_ptr<ShapeIntersection> s = intersect(ray);
     // if no intersections, render a single black pixel
     if (!s) {
-        return glm::vec3(0, 0, 0);
+        return glm::vec3(0);
     }
 
-    glm::vec3 color;
-    if (maxRecursion > 1) {
-        switch (s->primitive.material.type) {
-            case MaterialType::MATERIAL_PHONG:
-                color = renderPhong(ray, *s, maxRecursion - 1);
-                break;
-            case MaterialType::MATERIAL_METAL:
-                color = renderMetal(ray, *s, maxRecursion - 1);
-                break;
-            case MaterialType::MATERIAL_GLASS:
-                color = renderGlass(ray, *s, maxRecursion - 1);
-                break;
-        }
+    switch (s->primitive.material.type) {
+        case MaterialType::MATERIAL_PHONG:
+            return renderPhong(ray, *s);
+        case MaterialType::MATERIAL_METAL:
+            return renderMetal(ray, *s);
+        case MaterialType::MATERIAL_GLASS:
+            return renderGlass(ray, *s);
+        default:
+            return glm::vec3(0);
     }
-
-
-    return color;
 }
 
-glm::vec3 RayScene::renderPhong(Ray &ray, ShapeIntersection &s, int maxRecursion)
+glm::vec3 RayScene::renderPhong(Ray &ray, ShapeIntersection &s)
 {
     glm::vec3 color = illuminate(s, ray.eye);
-    Ray reflectedRay(s.intersection, glm::reflect(ray.dir, s.normal), EPSILON);
-    glm::vec3 reflectedColor = glm::vec3(getGlobal().ks * s.primitive.material.cReflective * glm::vec4(rayTrace(reflectedRay, maxRecursion), 1.f));
+    glm::vec4 multiplier = getGlobal().ks * s.primitive.material.cReflective;
+    Ray reflectedRay(s.intersection, glm::reflect(ray.dir, s.normal), EPSILON, ray.depth + 1, ray.radiance * multiplier);
+    glm::vec3 reflectedColor = glm::vec3(multiplier * glm::vec4(rayTrace(reflectedRay), 1.f));
     return color + reflectedColor;
 }
 
-glm::vec3 RayScene::renderMetal(Ray &ray, ShapeIntersection &s, int maxRecursion)
+glm::vec3 RayScene::renderMetal(Ray &ray, ShapeIntersection &s)
 {
     glm::vec3 color = illuminate(s, ray.eye);
     return color;
 }
 
-glm::vec3 RayScene::renderGlass(Ray &ray, ShapeIntersection &s, int maxRecursion)
+glm::vec3 RayScene::renderGlass(Ray &ray, ShapeIntersection &s)
 {
-    Ray reflect(s.intersection, glm::reflect(ray.dir, s.normal), EPSILON);
-    glm::vec3 reflectionColor = rayTrace(reflect, maxRecursion);
-    float ior = s.primitive.material.ior;
-    float eta = s.isInside ? ior : 1.f / ior;
-    Ray refract(s.intersection, glm::refract(ray.dir, s.normal, eta), EPSILON);
-    glm::vec3 refractionColor = rayTrace(refract, maxRecursion);
-    float fresnelCoefficient = fresnel(ior, s.normal, ray.dir);
+    glm::vec3 ior(s.primitive.material.ior.r, s.primitive.material.ior.g, s.primitive.material.ior.b);
+    glm::vec3 eta = s.isInside ? ior : 1.f / ior;
+    float fresnelR = fresnel(ior.r, s.normal, ray.dir);
+    float fresnelG = fresnel(ior.g, s.normal, ray.dir);
+    float fresnelB = fresnel(ior.b, s.normal, ray.dir);
+    glm::vec3 fresnelCoefficient(fresnelR, fresnelG, fresnelB);
+
+    Ray reflect(s.intersection, glm::reflect(ray.dir, s.normal), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(fresnelCoefficient, 1.f));
+    glm::vec3 reflectionColor = rayTrace(reflect);
+
+    Ray refractR(s.intersection, glm::refract(ray.dir, s.normal, eta.r), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(fresnelR, 0.f, 0.f, 1.f));
+    Ray refractG(s.intersection, glm::refract(ray.dir, s.normal, eta.g), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(0.f, fresnelG, 0.f, 1.f));
+    Ray refractB(s.intersection, glm::refract(ray.dir, s.normal, eta.b), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(0.f, 0.f, fresnelB, 1.f));
+    float refractionColorR = rayTrace(refractR).r;
+    float refractionColorG = rayTrace(refractG).g;
+    float refractionColorB = rayTrace(refractB).b;
+    glm::vec3 refractionColor(refractionColorR, refractionColorG, refractionColorB);
 
     return (1.f - fresnelCoefficient) * refractionColor + fresnelCoefficient * reflectionColor;
 }

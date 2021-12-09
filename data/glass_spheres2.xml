@@ -43,7 +43,7 @@
 			<translate x="0" y="0" z="0"/>
 			<object type="primitive" name="sphere">
 				<material type="glass"/>
-				<ior v="1.4"/>
+				<ior r="1.4" g="1.39" b="1.38"/>
 			</object>
 		</transblock>
 	</object>

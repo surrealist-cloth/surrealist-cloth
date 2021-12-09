@@ -152,9 +152,9 @@ void Canvas2D::renderPixel(CS123SceneCameraData *camera, const glm::mat4& invCam
 
     glm::vec3 color = m_rayScene->rayTrace(ray);
     pix[row * width + col] = RGBA(glm::min(255, static_cast<int>(color.x * 255)),
-                                          glm::min(255, static_cast<int>(color.y * 255)),
-                                          glm::min(255, static_cast<int>(color.z * 255)),
-                                          255);
+                                  glm::min(255, static_cast<int>(color.y * 255)),
+                                  glm::min(255, static_cast<int>(color.z * 255)),
+                                  255);
 }
 
 void Canvas2D::renderImage(CS123SceneCameraData *camera, int width, int height) {
