@@ -17,9 +17,9 @@ public:
 protected:
     std::vector<float> intersect(Ray& ray) const override;
 private:
-    glm::vec3 &m_a;
-    glm::vec3 &m_b;
-    glm::vec3 &m_c;
+    std::unique_ptr<glm::vec3> m_a;
+    std::unique_ptr<glm::vec3> m_b;
+    std::unique_ptr<glm::vec3> m_c;
 };
 
 #endif // TRIANGLEISHAPE_H

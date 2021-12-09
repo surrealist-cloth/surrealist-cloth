@@ -18,7 +18,7 @@ public:
 protected:
     std::vector<float> intersect(Ray& ray) const override;
 private:
-    std::vector<TriangleIShape> m_triangles;
+    std::vector<std::unique_ptr<TriangleIShape>> m_triangles;
 };
 
 #endif // MESHISHAPE_H

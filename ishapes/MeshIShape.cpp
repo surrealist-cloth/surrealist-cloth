@@ -8,9 +8,8 @@ MeshIShape::MeshIShape():
     glm::vec3 a = glm::vec3(-0.5f, -0.5f, 0.0f);
     glm::vec3 b = glm::vec3(0.5f, 0.5f, 0.0f);
     glm::vec3 c = glm::vec3(0.5f, 0.5f, 0.0f);
-    TriangleIShape t_1 = TriangleIShape(a,b,c);
 
-    m_triangles.push_back(t_1);
+    m_triangles.push_back(std::make_unique<TriangleIShape>(a, b, c));
 }
 
 
@@ -19,7 +18,7 @@ std::vector<float> MeshIShape::intersect(Ray &ray) const {
     std::vector<float> ts;
 
     for (int i = 0; i < m_triangles.size(); i++) { //TO IMPROVE: I'm copying all the triangles
-        for (float i : m_triangles[i].allIntersect(ray) ) {
+        for (float i : m_triangles[i]->allIntersect(ray) ) {
              ts.push_back(i);
         }
     }
