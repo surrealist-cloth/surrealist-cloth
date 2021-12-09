@@ -19,3 +19,4 @@ qrc_resources.cpp
 *.app
 surrealist-cloth
 surrealist-cloth.app
+.vscode
