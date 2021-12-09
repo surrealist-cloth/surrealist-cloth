@@ -8,9 +8,9 @@ MeshIShape::MeshIShape():
     glm::vec3 a = glm::vec3(-0.5f, -0.5f, 0.0f);
     glm::vec3 b = glm::vec3(0.5f, 0.5f, 0.0f);
     glm::vec3 c = glm::vec3(0.5f, 0.5f, 0.0f);
-    TriangleIShape t = TriangleIShape(a,b,c);
+    TriangleIShape t_1 = TriangleIShape(a,b,c);
 
-    m_triangles.push_back(t);
+    m_triangles.push_back(t_1);
 }
 
 

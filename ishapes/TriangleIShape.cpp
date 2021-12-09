@@ -15,7 +15,9 @@
 TriangleIShape::TriangleIShape(glm::vec3 &a, glm::vec3 &b, glm::vec3 &c) :
     m_a(a), m_b(b), m_c(c)
 {
-
+    m_a = glm::vec3(-0.5f, -0.5f, 0.0f);
+    m_b = glm::vec3(-0.5f, -0.5f, 0.0f);
+    m_c = glm::vec3(-0.5f, -0.5f, 0.0f);
 }
 
 

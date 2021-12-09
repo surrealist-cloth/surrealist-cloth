@@ -47,7 +47,6 @@ RayScene::RayScene(Scene &scene) :
                 m_ishapes.push_back(std::make_unique<EmptyIShape>());
         }
     }
-
 }
 
 RayScene::~RayScene()
