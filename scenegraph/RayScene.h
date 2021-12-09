@@ -39,7 +39,7 @@ private:
     glm::vec4 getTexture(ShapeIntersection& s);
     bool isOccluded(Ray& lightRay, ShapeIntersection& s, float maxT);
     glm::vec3 illuminate(ShapeIntersection& s, glm::vec3 pos);
-    std::vector<std::reference_wrapper<IShape>> m_ishapes;
+    std::vector<std::unique_ptr<IShape>> m_ishapes;
     float EPSILON = 0.001;
 };
 

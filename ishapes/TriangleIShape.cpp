@@ -41,8 +41,7 @@ std::vector<float> TriangleIShape::intersect(Ray &ray) const {
     return ts;
 }
 
-std::unique_ptr<glm::vec3> TriangleIShape::getNormal(glm::vec3& point) const
-{
+std::unique_ptr<glm::vec3> TriangleIShape::getNormal(glm::vec3& point) const {
     return std::make_unique<glm::vec3>(glm::normalize(glm::cross(m_b - m_a, m_c - m_a)));
 }
 

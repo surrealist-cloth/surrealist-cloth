@@ -10,6 +10,7 @@
 #include <ishapes/CubeIShape.h>
 #include <ishapes/CylinderIShape.h>
 #include <ishapes/SphereIShape.h>
+#include <ishapes/MeshIShape.h>
 #include <ishapes/EmptyIShape.h>
 #include <memory>
 #include "RGBA.h"
@@ -18,6 +19,8 @@
 RayScene::RayScene(Scene &scene) :
     Scene(scene)
 {
+    MeshIShape m = *(new MeshIShape());
+
     // TODO [INTERSECT]
     // Remember that any pointers or OpenGL objects (e.g. texture IDs) will
     // be deleted when the old scene is deleted (assuming you are managing
@@ -26,19 +29,22 @@ RayScene::RayScene(Scene &scene) :
     for (auto& primitive : getPrimitives()) {
         switch (primitive.type) {
             case PrimitiveType::PRIMITIVE_CONE:
-                m_ishapes.push_back(ConeIShape::shared_instance());
+                m_ishapes.push_back(std::make_unique<ConeIShape>());
                 break;
             case PrimitiveType::PRIMITIVE_CUBE:
-                m_ishapes.push_back(CubeIShape::shared_instance());
+                m_ishapes.push_back(std::make_unique<CubeIShape>());
                 break;
             case PrimitiveType::PRIMITIVE_CYLINDER:
-                m_ishapes.push_back(CylinderIShape::shared_instance());
+                m_ishapes.push_back(std::make_unique<CylinderIShape>());
                 break;
             case PrimitiveType::PRIMITIVE_SPHERE:
-                m_ishapes.push_back(SphereIShape::shared_instance());
+                m_ishapes.push_back(std::make_unique<SphereIShape>());
+                break;
+            case PrimitiveType::PRIMITIVE_MESH:
+                m_ishapes.push_back(std::make_unique<MeshIShape>());
                 break;
             default:
-                m_ishapes.push_back(EmptyIShape::shared_instance());
+                m_ishapes.push_back(std::make_unique<EmptyIShape>());
         }
     }
 
@@ -195,7 +201,7 @@ std::unique_ptr<ShapeIntersection> RayScene::intersect(Ray& ray)
     for (int i = 0; i < m_ishapes.size(); i++) {
         Ray objectRay(ray); // get a copy of the ray
         objectRay.transform(invTransformations[i]);
-        std::unique_ptr<float> intersection = m_ishapes[i].get().closestIntersect(objectRay);
+        std::unique_ptr<float> intersection = m_ishapes[i]->closestIntersect(objectRay);
         if (intersection && (!isMatch || *intersection < matchT)) {
             matchT = *intersection;
             matchI = i;
@@ -207,7 +213,7 @@ std::unique_ptr<ShapeIntersection> RayScene::intersect(Ray& ray)
     if (!isMatch) {
         return std::unique_ptr<ShapeIntersection>{};
     }
-    std::unique_ptr<glm::vec3> normalPointer = m_ishapes[matchI].get().getNormal(matchPoint);
+    std::unique_ptr<glm::vec3> normalPointer = m_ishapes[matchI]->getNormal(matchPoint);
     glm::vec3 intersection = ray.getPoint(matchT);
     glm::vec3 normal = normalPointer ? *normalPointer : glm::vec3(0, 1, 0);
     normal = glm::normalize(glm::transpose(glm::mat3(invTransformations[matchI])) * normal);
@@ -217,6 +223,6 @@ std::unique_ptr<ShapeIntersection> RayScene::intersect(Ray& ray)
         normal = -normal;
     }
 
-    return std::make_unique<ShapeIntersection>(matchT, intersection, normal, primitives[matchI], m_ishapes[matchI], invTransformations[matchI]);
+    return std::make_unique<ShapeIntersection>(matchT, intersection, normal, primitives[matchI], *m_ishapes[matchI], invTransformations[matchI]);
 }
 

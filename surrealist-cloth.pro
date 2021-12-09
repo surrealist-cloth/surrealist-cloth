@@ -41,6 +41,7 @@ SOURCES += \
     ishapes/CylinderIShape.cpp \
     ishapes/EmptyIShape.cpp \
     ishapes/IShape.cpp \
+    ishapes/MeshIShape.cpp \
     ishapes/SphereIShape.cpp \
     ishapes/TriangleIShape.cpp \
     scenegraph/Scene.cpp \
@@ -107,6 +108,7 @@ HEADERS += \
     ishapes/CylinderIShape.h \
     ishapes/EmptyIShape.h \
     ishapes/IShape.h \
+    ishapes/MeshIShape.h \
     ishapes/SphereIShape.h \
     ishapes/TriangleIShape.h \
     scenegraph/Scene.h \
