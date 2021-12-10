@@ -52,6 +52,7 @@ void Cloth::step()
     {
         mass->step(m_timeStep, m_damping);
     }
+    avoidSelfCollisions();
 }
 
 void Cloth::translate(const glm::vec3 &translation)
@@ -91,6 +92,27 @@ void Cloth::addWindForce(const glm::vec3 &force)
             m_masses[index]->addForce(windForce2);
             m_masses[index + 1 + m_cols]->addForce(windForce2);
             m_masses[index + m_cols + 1]->addForce(windForce2);
+        }
+    }
+}
+
+void Cloth::avoidSelfCollisions()
+{
+    for (auto &mass : m_masses)
+    {
+        for (auto &other : m_masses)
+        {
+            if (mass != other)
+            {
+                glm::vec3 direction = mass->getPosition() - other->getPosition();
+                float distance = glm::length(direction);
+                if (distance < m_selfCollisionDistance)
+                {
+                    glm::vec3 correction = glm::normalize(direction) * (m_selfCollisionDistance - distance) / 2.0f;
+                    mass->translate(correction);
+                    other->translate(-correction);
+                }
+            }
         }
     }
 }
