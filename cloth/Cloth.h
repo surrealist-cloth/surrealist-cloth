@@ -13,6 +13,9 @@ class Cloth
     Cloth(int rows, int cols);
     ~Cloth();
     void step();
+    void translate(const glm::vec3 &direction);
+    void addForce(const glm::vec3 &force);
+    void addWindForce(const glm::vec3 &wind);
 
   protected:
     int m_rows;
