@@ -15,8 +15,8 @@
 TriangleIShape::TriangleIShape(glm::vec3 &a, glm::vec3 &b, glm::vec3 &c)
 {
     m_a = std::make_unique<glm::vec3>(-0.5f, -0.5f, 0.0f);
-    m_b = std::make_unique<glm::vec3>(-0.5f, -0.5f, 0.0f);
-    m_c = std::make_unique<glm::vec3>(-0.5f, -0.5f, 0.0f);
+    m_b = std::make_unique<glm::vec3>(0.5f, -0.5f, 0.0f);
+    m_c = std::make_unique<glm::vec3>(0.0f, 0.5f, 0.0f);
 }
 
 
@@ -25,18 +25,32 @@ std::vector<float> TriangleIShape::intersect(Ray &ray) const {
     std::vector<float> ts;
     float t;
 
-    glm::vec3 n = glm::normalize(glm::cross(*m_b - *m_a, *m_c - *m_a));
+    glm::vec3 a_b = *m_b - *m_a;
+    glm::vec3 a_c = *m_c - *m_a;
+
+    glm::vec3 perp = glm::cross(a_b, a_c);
+
+    glm::vec3 n = glm::normalize(perp);
+
     float d = glm::dot(n, *m_a);
 
     // find point p + dt on the triangle's plane
-    if (glm::dot(n, ray.dir)) return ts; // d is parallel to plane
+    if (glm::epsilonEqual(glm::dot(n, ray.dir), 0.0f, EPSILON)) {
+        return ts;
+    } // d is parallel to plane
     t = (d - glm::dot(n, ray.eye)) / (glm::dot(n, ray.dir));
 
     // check if ray intersection with plane is inside triangle
     // (see if on the inside line of all edges by checking normal's direction)
-    if (glm::dot(glm::cross(*m_b - *m_a, (ray.eye + t * ray.dir) - *m_a), n) < 0) return ts;
-    if (glm::dot(glm::cross(*m_c - *m_b, (ray.eye + t * ray.dir) - *m_b), n) < 0) return ts;
-    if (glm::dot(glm::cross(*m_a - *m_c, (ray.eye + t * ray.dir) - *m_c), n) < 0) return ts;
+    if (glm::dot(glm::cross(*m_b - *m_a, (ray.eye + t * ray.dir) - *m_a), n) < 0) {
+        return ts;
+    }
+    if (glm::dot(glm::cross(*m_c - *m_b, (ray.eye + t * ray.dir) - *m_b), n) < 0) {
+        return ts;
+    }
+    if (glm::dot(glm::cross(*m_a - *m_c, (ray.eye + t * ray.dir) - *m_c), n) < 0) {
+        return ts;
+    }
 
     ts.push_back(t);
     return ts;
