@@ -22,7 +22,8 @@ struct Tri {
 class MeshIShape : public IShape
 {
 public:
-    MeshIShape(std::vector<Tri> triangles, std::vector<glm::vec3> vertices);
+    MeshIShape(std::string meshfile);
+    MeshIShape(std::vector<glm::vec3> vertices, std::vector<Tri> triangles);
     MeshIShape(); // generate a default mesh
     //MeshIShape(string); //takes in string to a file path
     virtual ~MeshIShape() {};
@@ -41,8 +42,13 @@ private:
     bool isWithinTriangle(int triIndex, glm::vec3 &point) const;
     glm::vec3 getNormal(int triIndex, glm::vec3 point) const;
 
-    std::vector<Tri> m_triangles; //point to verts
+    void loadDummyCloth();
+    void loadTwoTriangles();
+    void loadCube();
+
     std::vector<glm::vec3> m_vertices;
+    std::vector<Tri> m_triangles; //point to verts
+
     std::vector<glm::vec3> m_vertexNormals; // might not even need this
     std::vector<std::vector<int>> m_vertexTriangles; // given a vertex, what triangles include it?
 

@@ -41,7 +41,7 @@ RayScene::RayScene(Scene &scene) :
                 m_ishapes.push_back(std::make_unique<SphereIShape>());
                 break;
             case PrimitiveType::PRIMITIVE_MESH:
-                m_ishapes.push_back(std::make_unique<MeshIShape>());
+                m_ishapes.push_back(std::make_unique<MeshIShape>(primitive.meshfile));
                 break;
             default:
                 m_ishapes.push_back(std::make_unique<EmptyIShape>());
