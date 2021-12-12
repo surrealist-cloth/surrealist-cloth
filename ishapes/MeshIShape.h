@@ -38,9 +38,12 @@ private:
     float getInterpolationWeight(int triIndex) const;
     glm::vec3 getVertexNormal(int vertexIndex) const;
     glm::vec3 getTriangleNormal(int triIndex) const;  // Returns unnormalized Normal!
-
     bool isWithinTriangle(int triIndex, glm::vec3 &point) const;
+
     glm::vec3 getNormal(int triIndex, glm::vec3 point) const;
+    glm::vec3 getNormalLowPoly(int triIndex, glm::vec3 point) const;
+    glm::vec3 getNormalAvrg(int triIndex, glm::vec3 point) const;
+    glm::vec3 getNormalBarycentric(int triIndex, glm::vec3 point) const;
 
     void loadDummyCloth();
     void loadTwoTriangles();

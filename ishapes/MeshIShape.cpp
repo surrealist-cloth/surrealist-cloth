@@ -101,6 +101,10 @@ std::vector<IntersectionCandidate> MeshIShape::intersectTriangle(int triIndex, R
 }
 
 glm::vec3 MeshIShape::getNormal(int triIndex, glm::vec3 point) const {
+    return getNormalLowPoly(triIndex, point);
+}
+
+glm::vec3 MeshIShape::getNormalLowPoly(int triIndex, glm::vec3 point) const {
     if (!isWithinTriangle(triIndex, point)) {
         return glm::vec3(0.0f, 0.0f, 1.0f);
     }
@@ -108,10 +112,51 @@ glm::vec3 MeshIShape::getNormal(int triIndex, glm::vec3 point) const {
     glm::vec3 n_1 = getVertexNormal(m_triangles[triIndex].v_1);
     glm::vec3 n_2 = getVertexNormal(m_triangles[triIndex].v_2);
     glm::vec3 n_3 = getVertexNormal(m_triangles[triIndex].v_3);
+
+    return getTriangleNormal(triIndex);
+}
+
+glm::vec3 MeshIShape::getNormalAvrg(int triIndex, glm::vec3 point) const {
+    if (!isWithinTriangle(triIndex, point)) {
+        return glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+
+    glm::vec3 n_1 = getVertexNormal(m_triangles[triIndex].v_1);
+    glm::vec3 n_2 = getVertexNormal(m_triangles[triIndex].v_2);
+    glm::vec3 n_3 = getVertexNormal(m_triangles[triIndex].v_3);
+
+    glm::vec3 p_v1 = m_vertices[m_triangles[triIndex].v_1] - point;
+    glm::vec3 p_v2 = m_vertices[m_triangles[triIndex].v_2] - point;
+    glm::vec3 p_v3 = m_vertices[m_triangles[triIndex].v_3] - point;
+
+    glm::vec3 distances = glm::vec3(
+                                    sqrt(pow(p_v1.x, 2) + pow(p_v1.y, 2) + pow(p_v1.z, 2)),
+                                    sqrt(pow(p_v2.x, 2) + pow(p_v2.y, 2) + pow(p_v2.z, 2)),
+                                    sqrt(pow(p_v3.x, 2) + pow(p_v3.y, 2) + pow(p_v3.z, 2))
+                          ); // by normalizing this, I can have weights add to 1
+
+    distances = glm::normalize(distances);
+
+    glm::vec3 n_point = distances.z * n_1 + distances.y * n_2 + distances.z * n_3;
+
+    // TODO: compute weighted average of these points
+    //      by converting from Cartesian coords to barycentric
+
+    return n_point;
+}
+
+glm::vec3 MeshIShape::getNormalBarycentric(int triIndex, glm::vec3 point) const {
+    if (!isWithinTriangle(triIndex, point)) {
+        return glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+    glm::vec3 n_1 = getVertexNormal(m_triangles[triIndex].v_1);
+    glm::vec3 n_2 = getVertexNormal(m_triangles[triIndex].v_2);
+    glm::vec3 n_3 = getVertexNormal(m_triangles[triIndex].v_3);
+
     //TODO: compute weighted average of these points
     //      by converting from Cartesian coords to barycentric
 
-    return getTriangleNormal(triIndex);
+    return glm::vec3(0.0f, 0.0f, 1.0f);
 }
 
 bool MeshIShape::isWithinTriangle(int triIndex, glm::vec3 &point) const {
