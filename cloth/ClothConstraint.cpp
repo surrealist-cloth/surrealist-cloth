@@ -15,6 +15,6 @@ void ClothConstraint::satisfyConstraint()
     glm::vec3 direction = m_mass2.getPosition() - m_mass1.getPosition();
     float distance = glm::length(direction);
     glm::vec3 correctionVector = direction * (1.0f - m_equilibriumDistance / distance) * 0.5f;
-    m_mass1.offsetPosition(correctionVector);
-    m_mass2.offsetPosition(-correctionVector);
+    m_mass1.translate(correctionVector);
+    m_mass2.translate(-correctionVector);
 }

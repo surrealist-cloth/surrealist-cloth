@@ -48,7 +48,7 @@ void ClothMass::setFixed(bool fixed)
     m_isFixed = fixed;
 }
 
-void ClothMass::offsetPosition(const glm::vec3 &offset)
+void ClothMass::translate(const glm::vec3 &offset)
 {
     *m_position += offset;
 }

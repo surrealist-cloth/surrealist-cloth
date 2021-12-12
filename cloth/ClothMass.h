@@ -18,7 +18,7 @@ class ClothMass
     void setPosition(const glm::vec3 &position);
     void addForce(const glm::vec3 &force);
     void setFixed(bool fixed);
-    void offsetPosition(const glm::vec3 &offset);
+    void translate(const glm::vec3 &offset);
     void step(float dt, float damping);
 
   protected:

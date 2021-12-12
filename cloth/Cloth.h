@@ -13,6 +13,10 @@ class Cloth
     Cloth(int rows, int cols);
     ~Cloth();
     void step();
+    void translate(const glm::vec3 &direction);
+    void addForce(const glm::vec3 &force);
+    void addWindForce(const glm::vec3 &wind);
+    void avoidSelfCollisions();
 
   protected:
     int m_rows;
@@ -26,6 +30,7 @@ class Cloth
     const float m_timeStep = 1.f / 60.f;
     const float m_damping = 0.1;
     const int m_constraintIterations = 10;
+    const float m_selfCollisionDistance = 0.1;
 };
 
 #endif // CLOTH_H
