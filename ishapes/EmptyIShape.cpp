@@ -8,12 +8,8 @@ EmptyIShape::EmptyIShape()
 
 }
 
-std::vector<float> EmptyIShape::intersect(Ray& ray) const
+std::vector<IntersectionCandidate> EmptyIShape::intersect(Ray& ray) const
 {
-    return std::vector<float>();
+    return std::vector<IntersectionCandidate>();
 }
 
-std::unique_ptr<glm::vec3> EmptyIShape::getNormal(glm::vec3& point) const
-{
-    return std::unique_ptr<glm::vec3>{};
-}

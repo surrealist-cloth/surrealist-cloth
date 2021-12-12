@@ -14,10 +14,9 @@ public:
     static ConeIShape &shared_instance() {static ConeIShape shape; return shape;}
     ConeIShape();
     virtual ~ConeIShape() {};
-    std::unique_ptr<glm::vec3> getNormal(glm::vec3& point) const override;
     std::unique_ptr<glm::vec2> parameterize(glm::vec3& point) const override;
 protected:
-    std::vector<float> intersect(Ray& ray) const override;
+    std::vector<IntersectionCandidate> intersect(Ray& ray) const override;
 private:
     std::unique_ptr<CircleIShape> m_bottom;
 };
