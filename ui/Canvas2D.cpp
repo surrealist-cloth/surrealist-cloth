@@ -159,11 +159,13 @@ void Canvas2D::renderPixel(CS123SceneCameraData *camera, const glm::mat4& invCam
 
 void Canvas2D::renderImage(CS123SceneCameraData *camera, int width, int height) {
     if (m_rayScene) {
+        int numSuperSamples = settings.useSuperSampling ? glm::max(settings.numSuperSamples, 1) : 1;
         m_isRendering = true;
         resize(width, height);
         std::vector<RGBA> superPix;
-        int superWidth = width * settings.numSuperSamples;
-        int superHeight = height * settings.numSuperSamples;
+        int superWidth = width * numSuperSamples;
+
+        int superHeight = height * numSuperSamples;
         superPix.resize(superWidth * superHeight);
 
         glm::mat4 invCameraTransformation = glm::inverse(m_rayScene->getCameraTransformation(camera));
@@ -195,10 +197,10 @@ void Canvas2D::renderImage(CS123SceneCameraData *camera, int width, int height) 
         }
 
         // scale down
-        if (settings.numSuperSamples == 1) {
+        if (numSuperSamples == 1) {
             memcpy(data(), superPix.data(), width * height * sizeof(RGBA));
         } else {
-            ScaleFilter filter(1.f / settings.numSuperSamples, 1.f / settings.numSuperSamples);
+            ScaleFilter filter(1.f / numSuperSamples, 1.f / numSuperSamples);
             filter.applyRGBA(superPix.data(), data(), superWidth, superHeight);
         }
 

@@ -228,8 +228,8 @@ void MainWindow::dataBind() {
     BIND(BoolBinding::bindCheckbox(ui->rayAntiAliasing,          settings.useAntiAliasing))
     BIND(BoolBinding::bindCheckbox(ui->rayShadows,               settings.useShadows))
     BIND(BoolBinding::bindCheckbox(ui->rayTextureMapping,        settings.useTextureMapping))
-    BIND(BoolBinding::bindCheckbox(ui->rayReflection,            settings.useReflection))
-    BIND(BoolBinding::bindCheckbox(ui->rayRefraction,            settings.useRefraction))
+    BIND(BoolBinding::bindCheckbox(ui->rayRecursive,            settings.useRecursive))
+    BIND(BoolBinding::bindCheckbox(ui->rayRGBIOR,            settings.useRGBIOR))
     BIND(BoolBinding::bindCheckbox(ui->rayPointLights,           settings.usePointLights))
     BIND(BoolBinding::bindCheckbox(ui->rayDirectionalLights,     settings.useDirectionalLights))
     BIND(BoolBinding::bindCheckbox(ui->raySpotLights,            settings.useSpotLights))
@@ -288,8 +288,8 @@ void MainWindow::setAllRayFeatures(bool checked) {
     ui->rayAntiAliasing->setChecked(checked);
     ui->rayShadows->setChecked(checked);
     ui->rayTextureMapping->setChecked(checked);
-    ui->rayReflection->setChecked(checked);
-    ui->rayRefraction->setChecked(checked);
+    ui->rayRecursive->setChecked(checked);
+    ui->rayRGBIOR->setChecked(checked);
     ui->rayMultiThreading->setChecked(checked);
 
     // We don't want to affect the light checkboxes...

@@ -64,8 +64,8 @@ void Settings::loadSettingsOrDefaults() {
     useAntiAliasing = s.value("useAntiAliasing", true).toBool();
     useShadows = s.value("useShadows", false).toBool();
     useTextureMapping = s.value("useTextureMapping", false).toBool();
-    useReflection = s.value("useReflection", false).toBool();
-    useRefraction = s.value("useRefraction", false).toBool();
+    useRecursive = s.value("useRecursive", false).toBool();
+    useRGBIOR = s.value("useRGBIOR", false).toBool();
     useMultiThreading = s.value("useMultiThreading", true).toBool();
     usePointLights = s.value("usePointLights", true).toBool();
     useDirectionalLights = s.value("useDirectionalLights", true).toBool();
@@ -124,8 +124,8 @@ void Settings::saveSettings() {
     s.setValue("useAntiAliasing", useAntiAliasing);
     s.setValue("useShadows", useShadows);
     s.setValue("useTextureMapping", useTextureMapping);
-    s.setValue("useReflection", useReflection);
-    s.setValue("useRefraction", useRefraction);
+    s.setValue("useRecursive", useRecursive);
+    s.setValue("useRGBIOR", useRGBIOR);
     s.setValue("useMultiThreading", useMultiThreading);
     s.setValue("usePointLights", usePointLights);
     s.setValue("useDirectionalLights", useDirectionalLights);

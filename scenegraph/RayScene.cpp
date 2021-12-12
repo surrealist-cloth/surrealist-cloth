@@ -15,6 +15,9 @@
 #include "RGBA.h"
 #include <limits>
 #include <glm/gtx/extented_min_max.hpp>
+#include <glm/gtx/projection.hpp>
+#include <glm/gtc/epsilon.hpp>
+#include <glm/gtc/random.hpp>
 
 RayScene::RayScene(Scene &scene) :
     Scene(scene)
@@ -113,9 +116,40 @@ glm::vec3 RayScene::illuminate(ShapeIntersection& s, glm::vec3 pos)
     return glm::vec3(color);
 }
 
-glm::vec3 RayScene::rayTrace(Ray &ray)
+glm::vec3 RayScene::sampleGGX(float roughness, glm::vec3 normal, glm::vec3 raydir)
 {
-    if (!settings.useReflection || ray.depth == MAX_RECURSION || ray.radiance.a * glm::max(ray.radiance.r, ray.radiance.g, ray.radiance.b) < MIN_INTENSITY) {
+    float e1 = glm::linearRand(0.f, 1.f);
+    float e2 = glm::linearRand(0.f, 1.f);
+    float theta = glm::acos(glm::sqrt((1.f - e1) / ((glm::pow(roughness, 2.f) - 1.f) * e1 + 1.f)));
+    float phi = 2.f * glm::pi<float>() * e2;
+    glm::vec3 v(glm::cos(phi) * glm::sin(theta),
+                glm::sin(phi) * glm::sin(theta),
+                glm::cos(theta));
+    return tangentSpaceToWorldSpace(v, normal, raydir);
+}
+
+glm::vec3 RayScene::tangentSpaceToWorldSpace(glm::vec3 v, glm::vec3 normal, glm::vec3 raydir)
+{
+    // use an arbitrary orthogonal vector as tangent if raydir is parallel to normal
+    if (glm::all(glm::epsilonEqual(raydir, normal, EPSILON))) {
+        raydir = glm::vec3(normal.x + 1, normal.y, normal.z);
+    }
+    glm::vec3 tangent = glm::normalize(raydir - glm::proj(raydir, normal));
+    glm::vec3 binormal = glm::cross(tangent, normal);
+    glm::mat3 tbn(tangent, binormal, normal);
+    return glm::normalize(tbn * v);
+}
+
+glm::vec3 RayScene::getIOR(ShapeIntersection &s)
+{
+    return settings.useRGBIOR ?
+                    glm::vec3(s.primitive.material.ior.r, s.primitive.material.ior.g, s.primitive.material.ior.b) :
+                    glm::vec3((s.primitive.material.ior.r + s.primitive.material.ior.g + s.primitive.material.ior.b) / 3.f);
+}
+
+glm::vec3 RayScene::rayTrace(Ray& ray)
+{
+    if ((!settings.useRecursive && ray.depth > 0) || ray.depth == MAX_RECURSION || ray.radiance.a * glm::max(ray.radiance.r, ray.radiance.g, ray.radiance.b) < MIN_INTENSITY) {
         return glm::vec3(0);
     }
 
@@ -137,48 +171,110 @@ glm::vec3 RayScene::rayTrace(Ray &ray)
     }
 }
 
-glm::vec3 RayScene::renderPhong(Ray &ray, ShapeIntersection &s)
+glm::vec3 RayScene::renderPhong(Ray& ray, ShapeIntersection &s)
 {
+    if (s.isInside) {
+        return glm::vec3(0);
+    }
     glm::vec3 color = illuminate(s, ray.eye);
     glm::vec4 multiplier = getGlobal().ks * s.primitive.material.cReflective;
     Ray reflectedRay(s.intersection, glm::reflect(ray.dir, s.normal), EPSILON, ray.depth + 1, ray.radiance * multiplier);
     glm::vec3 reflectedColor = glm::vec3(multiplier * glm::vec4(rayTrace(reflectedRay), 1.f));
-    return color + reflectedColor;
+    return glm::clamp(color + reflectedColor, 0.f, 1.f);
 }
 
-glm::vec3 RayScene::renderMetal(Ray &ray, ShapeIntersection &s)
+glm::vec3 RayScene::renderMetal(Ray& ray, ShapeIntersection &s)
 {
-    glm::vec3 color = illuminate(s, ray.eye);
-    return color;
+    glm::vec3 objectColor = illuminate(s, ray.eye);
+
+    glm::vec3 specularColor(0);
+    glm::vec3 cSpecular(0);
+
+    const int SAMPLE_COUNT = 32;
+    #pragma omp parallel for
+    for (int i = 0; i < SAMPLE_COUNT; i++) {
+        glm::vec3 sampleNormal = sampleGGX(s.primitive.material.roughness, s.normal, ray.dir);
+        glm::vec3 sampleDir = glm::normalize(glm::reflect(ray.dir, sampleNormal));
+        if ((glm::dot(sampleDir, s.normal) < 0.f) || (glm::dot(sampleDir, sampleNormal) < 0.f)) continue;
+        glm::vec3 fresnel = getFresnel(glm::vec3(s.primitive.material.cReflective), sampleNormal, sampleDir);
+        float geometricAttenuation = getGeometricAttenuation(sampleDir, ray.dir, s.normal, s.primitive.material.roughness);
+
+        glm::vec3 multiplier = glm::clamp(fresnel *
+                                          geometricAttenuation *
+                                          glm::abs(glm::dot(ray.dir, sampleNormal) / (glm::dot(ray.dir, s.normal) * glm::dot(sampleNormal, s.normal))),
+                                          0.f, 1.f);
+
+        Ray reflectedRay(s.intersection, sampleDir, EPSILON, ray.depth + 1, ray.radiance * glm::vec4(multiplier, 1.f));
+        glm::vec3 reflectedColor = multiplier * rayTrace(reflectedRay);
+
+        #pragma omp atomic
+        cSpecular += fresnel;
+
+        #pragma omp atomic
+        specularColor += reflectedColor;
+    }
+    cSpecular = cSpecular / static_cast<float>(SAMPLE_COUNT);
+    specularColor = specularColor / static_cast<float>(SAMPLE_COUNT);
+    return glm::clamp(specularColor + objectColor * (1.f - cSpecular), 0.f, 1.f);
 }
 
-glm::vec3 RayScene::renderGlass(Ray &ray, ShapeIntersection &s)
+glm::vec3 RayScene::renderGlass(Ray& ray, ShapeIntersection &s)
 {
-    glm::vec3 ior(s.primitive.material.ior.r, s.primitive.material.ior.g, s.primitive.material.ior.b);
-    glm::vec3 eta = s.isInside ? ior : 1.f / ior;
-    float fresnelR = fresnel(ior.r, s.normal, ray.dir);
-    float fresnelG = fresnel(ior.g, s.normal, ray.dir);
-    float fresnelB = fresnel(ior.b, s.normal, ray.dir);
-    glm::vec3 fresnelCoefficient(fresnelR, fresnelG, fresnelB);
-
-    Ray reflect(s.intersection, glm::reflect(ray.dir, s.normal), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(fresnelCoefficient, 1.f));
+    glm::vec3 ior = getIOR(s);
+    glm::vec3 fresnel = getFresnelDielectric(ior, s.normal, ray.dir);
+    Ray reflect(s.intersection, glm::reflect(ray.dir, s.normal), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(fresnel, 1.f));
     glm::vec3 reflectionColor = rayTrace(reflect);
 
-    Ray refractR(s.intersection, glm::refract(ray.dir, s.normal, eta.r), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(fresnelR, 0.f, 0.f, 1.f));
-    Ray refractG(s.intersection, glm::refract(ray.dir, s.normal, eta.g), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(0.f, fresnelG, 0.f, 1.f));
-    Ray refractB(s.intersection, glm::refract(ray.dir, s.normal, eta.b), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(0.f, 0.f, fresnelB, 1.f));
-    float refractionColorR = rayTrace(refractR).r;
-    float refractionColorG = rayTrace(refractG).g;
-    float refractionColorB = rayTrace(refractB).b;
-    glm::vec3 refractionColor(refractionColorR, refractionColorG, refractionColorB);
-
-    return (1.f - fresnelCoefficient) * refractionColor + fresnelCoefficient * reflectionColor;
+    glm::vec3 eta = s.isInside ? ior : 1.f / ior;
+    glm::vec3 refractionColor;
+    if (settings.useRGBIOR) {
+        Ray refractR(s.intersection, glm::refract(ray.dir, s.normal, eta.r), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(fresnel.r, 0.f, 0.f, 1.f));
+        Ray refractG(s.intersection, glm::refract(ray.dir, s.normal, eta.g), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(0.f, fresnel.g, 0.f, 1.f));
+        Ray refractB(s.intersection, glm::refract(ray.dir, s.normal, eta.b), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(0.f, 0.f, fresnel.b, 1.f));
+        refractionColor = glm::vec3(rayTrace(refractR).r,
+                                    rayTrace(refractG).g,
+                                    rayTrace(refractB).b);
+    } else {
+        Ray refract(s.intersection, glm::refract(ray.dir, s.normal, eta.r), EPSILON, ray.depth + 1, ray.radiance * glm::vec4(fresnel, 1.f));
+        refractionColor = rayTrace(refract);
+    }
+    return glm::clamp((1.f - fresnel) * refractionColor + fresnel * reflectionColor, 0.f, 1.f);
 }
 
-float RayScene::fresnel(float ior, glm::vec3 normal, glm::vec3 raydir)
+glm::vec3 RayScene::getFresnelDielectric(glm::vec3 ior, glm::vec3 normal, glm::vec3 raydir)
 {
-    float r0 = glm::pow((ior - 1.f) / (ior + 1.f), 2.f);
-    return glm::mix(glm::pow(1.f - glm::dot(normal, -raydir), 5.f), 1.f, r0);
+    glm::vec3 r0 = (ior - 1.f) / (ior + 1.f);
+    r0 = r0 * r0;
+    return getFresnel(r0, normal, raydir);
+}
+
+glm::vec3 RayScene::getFresnel(glm::vec3 r0, glm::vec3 normal, glm::vec3 raydir) {
+    if (glm::dot(raydir, normal) < 0.f) raydir = -raydir;
+    return glm::clamp(r0 + (1.f - r0) * glm::pow(1.f - glm::dot(normal, raydir), 5.f), 0.f, 1.f);
+}
+
+
+float RayScene::chi(float v)
+{
+    return v > 0 ? 1.f : 0.f;
+}
+
+float RayScene::partialGeometricTerm(glm::vec3 v, glm::vec3 normal, glm::vec3 half, float m)
+{
+    float product = glm::clamp(glm::dot(v, half), 0.f, 1.f);
+    float chiMultiplier = chi(product / glm::clamp(glm::dot(v, normal), 0.f, 1.f));
+    product = product * product;
+    float tan2 = (1.f - product) / product;
+    return chiMultiplier * 2.f / (1.f + glm::sqrt(1 + m * m * tan2));
+}
+
+float RayScene::getGeometricAttenuation(glm::vec3 sampleDir, glm::vec3 rayDir, glm::vec3 normal, float m)
+{
+    float m2 = m * m;
+    float GI = glm::dot(sampleDir, normal);
+    float GO = glm::dot(-rayDir, normal);
+
+    return 2.f * GI * GO / (GO * glm::sqrt(m2 + (1 - m2) * glm::pow(GI, 2.f)) + GI * glm::sqrt(m2 + (1 - m2) * glm::pow(GO, 2.f)));
 }
 
 glm::vec4 RayScene::getTexture(ShapeIntersection &s)

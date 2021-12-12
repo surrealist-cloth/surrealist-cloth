@@ -711,6 +711,7 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
     mat.bumpMap.isUsed = false;
     mat.cDiffuse.r = mat.cDiffuse.g = mat.cDiffuse.b = 1;
     mat.ior.r = 1.5; mat.ior.g = 1.49; mat.ior.b = 1.48;
+    mat.roughness = 0.02f;
 
     node->primitives.push_back(primitive);
 
@@ -802,7 +803,7 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
                 PARSE_ERROR(e);
                 return false;
             }
-        } else {
+        }else {
             UNSUPPORTED_ELEMENT(e);
             return false;
         }

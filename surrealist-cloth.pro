@@ -6,7 +6,9 @@ TARGET = surrealist-cloth
 TEMPLATE = app
 
 QMAKE_LFLAGS += -no-pie
+QMAKE_LFLAGS += -openmp
 QMAKE_CXXFLAGS += -std=c++14
+QMAKE_CXXFLAGS += -openmp
 CONFIG += c++14
 
 unix:!macx {

@@ -45,6 +45,7 @@ std::unique_ptr<glm::vec3> CylinderIShape::getNormal(glm::vec3& point) const
         return m_bottom->getNormal(point);
     }
     // do body
+
     return std::make_unique<glm::vec3>(2 * point.x, 0, 2 * point.z);
 }
 
