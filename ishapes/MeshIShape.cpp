@@ -137,7 +137,7 @@ glm::vec3 MeshIShape::getNormalAvrg(int triIndex, glm::vec3 point) const {
 
     distances = glm::normalize(distances);
 
-    glm::vec3 n_point = distances.z * n_1 + distances.y * n_2 + distances.z * n_3;
+    glm::vec3 n_point = (1 - distances.z) * n_1 + (1 - distances.y) * n_2 + (1 - distances.z) * n_3;
 
     // TODO: compute weighted average of these points
     //      by converting from Cartesian coords to barycentric
