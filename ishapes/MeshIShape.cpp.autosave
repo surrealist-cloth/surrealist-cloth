@@ -23,6 +23,9 @@
 
 //could have inverse point point to each other.
 
+
+//
+
 MeshIShape::MeshIShape(std::string meshfile) {
     if (meshfile == "cube") {
         loadCube();

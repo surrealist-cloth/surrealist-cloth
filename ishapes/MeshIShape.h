@@ -36,7 +36,7 @@ private:
     void loadVertexTriangles();
 
     float getInterpolationWeight(int triIndex) const;
-    glm::vec3 getVertexNormal(int vertexIndex) const;
+    glm::vec3 getVertexNormal(int vertIndex) const;
     glm::vec3 getTriangleNormal(int triIndex) const;  // Returns unnormalized Normal!
     bool isWithinTriangle(int triIndex, glm::vec3 &point) const;
 
@@ -48,6 +48,9 @@ private:
     void loadDummyCloth();
     void loadTwoTriangles();
     void loadCube();
+
+    bool validTri(int triIndex) const; //true if good index
+    bool validVert(int vertIndex) const; //true if good index
 
     std::vector<glm::vec3> m_vertices;
     std::vector<Tri> m_triangles; //point to verts
