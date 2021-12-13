@@ -12,14 +12,14 @@ SphereIShape::SphereIShape()
 
 }
 
-std::vector<IntersectionCandidate> SphereIShape::intersect(Ray& ray) const
+std::vector<IntersectionCandidate> SphereIShape::intersect(const Ray& ray) const
 {
     float a = pow(ray.dir.x, 2.f) + pow(ray.dir.y, 2.f) + pow(ray.dir.z, 2.f);
     float b = 2.f * ray.eye.x * ray.dir.x + 2.f * ray.eye.y * ray.dir.y + 2.f * ray.eye.z * ray.dir.z;
     float c = pow(ray.eye.x, 2.f) + pow(ray.eye.y, 2.f) + pow(ray.eye.z, 2.f) - 0.25;
     std::vector<IntersectionCandidate> ts;
     for (float t: solveQuadratic(a, b, c)) {
-        ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point) {
+        ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
             return glm::vec3(2 * point.x, 2 * point.y, 2 * point.z);
         }));
     }

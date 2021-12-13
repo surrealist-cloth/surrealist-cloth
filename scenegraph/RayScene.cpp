@@ -212,6 +212,9 @@ std::unique_ptr<ShapeIntersection> RayScene::intersect(Ray& ray)
     }
     glm::vec3 intersection = ray.getPoint(matchT);
     matchNormal = glm::normalize(glm::transpose(glm::mat3(invTransformations[matchI])) * matchNormal);
+    if (fabs(matchNormal.z) > 0.9) {
+        int i =0;
+    }
     // if the normal and the ray form an acute angle, then we should flip the normal, since
     // the ray is coming from the inside of the object
     if (glm::dot(ray.dir, matchNormal) > 0) {

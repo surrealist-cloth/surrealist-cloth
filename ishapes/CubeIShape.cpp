@@ -10,7 +10,7 @@ CubeIShape::CubeIShape()
 
 }
 
-std::vector<IntersectionCandidate> CubeIShape::intersect(Ray &ray) const
+std::vector<IntersectionCandidate> CubeIShape::intersect(const Ray& ray) const
 {
     std::vector<IntersectionCandidate> ts;
     float t;
@@ -20,14 +20,14 @@ std::vector<IntersectionCandidate> CubeIShape::intersect(Ray &ray) const
         t = (0.5 - ray.eye.y) / ray.dir.y;
         point = ray.getPoint(t);
         if (point.x <= 0.5 && point.x >= -0.5 && point.z <= 0.5 && point.z >= -0.5) {
-            ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point) {
+            ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
                                                 return glm::vec3(0, 1, 0);
                                                }));
         }
         t = (-0.5 - ray.eye.y) / ray.dir.y;
         point = ray.getPoint(t);
         if (point.x <= 0.5 && point.x >= -0.5 && point.z <= 0.5 && point.z >= -0.5) {
-            ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point) {
+            ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
                              return glm::vec3(0, -1, 0);
                             }));
         }
@@ -37,14 +37,14 @@ std::vector<IntersectionCandidate> CubeIShape::intersect(Ray &ray) const
         t = (0.5 - ray.eye.z) / ray.dir.z;
         point = ray.getPoint(t);
         if (point.x <= 0.5 && point.x >= -0.5 && point.y <= 0.5 && point.y >= -0.5) {
-            ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point) {
+            ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
                              return glm::vec3(0, 0, 1);
                             }));
         }
         t = (-0.5 - ray.eye.z) / ray.dir.z;
         point = ray.getPoint(t);
         if (point.x <= 0.5 && point.x >= -0.5 && point.y <= 0.5 && point.y >= -0.5) {
-            ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point) {
+            ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
                              return glm::vec3(0, 0, -1);
                             }));
         }
@@ -54,14 +54,14 @@ std::vector<IntersectionCandidate> CubeIShape::intersect(Ray &ray) const
         t = (0.5 - ray.eye.x) / ray.dir.x;
         point = ray.getPoint(t);
         if (point.y <= 0.5 && point.y >= -0.5 && point.z <= 0.5 && point.z >= -0.5) {
-            ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point) {
+            ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
                              return glm::vec3(1, 0, 0);
                             }));
         }
         t = (-0.5 - ray.eye.x) / ray.dir.x;
         point = ray.getPoint(t);
         if (point.y <= 0.5 && point.y >= -0.5 && point.z <= 0.5 && point.z >= -0.5) {
-            ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point) {
+            ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
                              return glm::vec3(-1, 0, 0);
                             }));
         }

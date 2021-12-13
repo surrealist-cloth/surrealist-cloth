@@ -11,7 +11,7 @@ CircleIShape::CircleIShape(float y, float normalY) : m_y(y), m_normalY(normalY)
 
 }
 
-std::vector<IntersectionCandidate> CircleIShape::intersect(Ray &ray) const
+std::vector<IntersectionCandidate> CircleIShape::intersect(const Ray& ray) const
 {
     std::vector<IntersectionCandidate> ts;
     float t;
@@ -20,7 +20,7 @@ std::vector<IntersectionCandidate> CircleIShape::intersect(Ray &ray) const
         t = (m_y - ray.eye.y) / ray.dir.y;
         point = ray.getPoint(t);
         if ((point.x * point.x + point.z * point.z) <= 0.25) {
-            ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point) {
+            ts.push_back(IntersectionCandidate(t, [=](glm::vec3 point) {
                            return glm::vec3(0, m_normalY, 0);
                          }));
         }

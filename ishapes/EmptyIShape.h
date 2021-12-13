@@ -14,7 +14,7 @@ public:
     EmptyIShape();
     virtual ~EmptyIShape() {};
 protected:
-    std::vector<IntersectionCandidate> intersect(Ray& ray) const override;
+    std::vector<IntersectionCandidate> intersect(const Ray& ray) const override;
 };
 
 EmptyIShape emptyIShape();

@@ -40,13 +40,13 @@ class IShape
 public:
     IShape() {};
     virtual ~IShape() {};
-    std::unique_ptr<IntersectionCandidate> closestIntersect(Ray& ray) const;
+    std::unique_ptr<IntersectionCandidate> closestIntersect(const Ray& ray) const;
     virtual std::unique_ptr<glm::vec2> parameterize(glm::vec3& point) const {
         return std::unique_ptr<glm::vec2>{};
     }
-    std::vector<IntersectionCandidate> allIntersect(Ray& ray) const;
+    std::vector<IntersectionCandidate> allIntersect(const Ray& ray) const;
 protected:
-    virtual std::vector<IntersectionCandidate> intersect(Ray& ray) const {
+    virtual std::vector<IntersectionCandidate> intersect(const Ray& ray) const {
         return std::vector<IntersectionCandidate>();
     }
     std::vector<float> solveQuadratic(float a, float b, float c) const;

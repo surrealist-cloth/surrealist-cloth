@@ -13,7 +13,7 @@ ConeIShape::ConeIShape()
     m_bottom = std::make_unique<CircleIShape>(-0.5, -1);
 }
 
-std::vector<IntersectionCandidate> ConeIShape::intersect(Ray &ray) const
+std::vector<IntersectionCandidate> ConeIShape::intersect(const Ray& ray) const
 {
     // intersect bottom circle
     std::vector<IntersectionCandidate> ts = m_bottom->allIntersect(ray);
@@ -28,7 +28,7 @@ std::vector<IntersectionCandidate> ConeIShape::intersect(Ray &ray) const
     });
 
     for (float t: bufferTs) {
-        ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point) {
+        ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
                          return glm::vec3(2 * point.x, - point.y / 2.f + 1 / 4.f, 2 * point.z);
                          })
                     );

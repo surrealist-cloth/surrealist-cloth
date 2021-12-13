@@ -7,7 +7,6 @@
 
 #include "ishapes/IShape.h"
 #include "scenegraph/RayScene.h"
-#include "ishapes/TriangleIShape.h"
 
 // Points v_1 thru v_3 specified in counter-clockwise order
 struct Tri {
@@ -27,7 +26,7 @@ public:
     virtual ~MeshIShape() {};
     std::unique_ptr<glm::vec2> parameterize(glm::vec3& point) const override;
 protected:
-    std::vector<IntersectionCandidate> intersect(Ray& ray) const override;
+    std::vector<IntersectionCandidate> intersect(const Ray& ray) const override;
 private:
     inline std::unique_ptr<IntersectionCandidate> intersectTriangle(int index, const Ray &ray) const;
 

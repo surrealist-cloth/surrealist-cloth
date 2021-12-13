@@ -3,12 +3,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/epsilon.hpp>
 
-//#include <Qt3DCore>
-//#include <Qt3DInput>
-
 #include "ishapes/MeshIShape.h"
 #include "ishapes/IShape.h"
-#include "ishapes/TriangleIShape.h"
 
 //Do it with pointers
 //Triangles with collisions
@@ -46,7 +42,7 @@ MeshIShape::MeshIShape(std::vector<glm::vec3> vertices, std::vector<Tri> triangl
 
 
 
-std::vector<IntersectionCandidate> MeshIShape::intersect(Ray &ray) const {
+std::vector<IntersectionCandidate> MeshIShape::intersect(const Ray& ray) const {
     std::vector<IntersectionCandidate> ts;
 
     for (int i = 0; i < m_triangles.size(); i++) {
@@ -71,7 +67,7 @@ std::unique_ptr<IntersectionCandidate> MeshIShape::intersectTriangle(int index, 
     float d = glm::dot(n, v_1);
     float denom = glm::dot(n, ray.dir);
     // denom is 0 if ray is parallel to triangle
-    if (denom == 0.f) return std::unique_ptr<IntersectionCandidate>(nullptr);
+    if (glm::epsilonEqual(denom, 0.f, FLT_EPSILON)) return std::unique_ptr<IntersectionCandidate>(nullptr);
 
     float t = (d - glm::dot(n, ray.eye)) / denom;
     glm::vec3 contact = ray.getPoint(t);
@@ -85,7 +81,8 @@ std::unique_ptr<IntersectionCandidate> MeshIShape::intersectTriangle(int index, 
     }
 
     return std::make_unique<IntersectionCandidate>(t,
-                                                   [&](glm::vec3 point){ return getNormalBarycentric(index, point);});
+                                                   [=](glm::vec3 point){
+        return getNormalBarycentric(index, point);});
 }
 
 void MeshIShape::pruneInvalidTriangles()
@@ -104,27 +101,25 @@ void MeshIShape::pruneInvalidTriangles()
 }
 
 glm::vec3 MeshIShape::getNormalBarycentric(int triIndex, glm::vec3 point) const {
-    return m_triangleNormals[triIndex];
+    const Tri tri = m_triangles[triIndex];
+    const glm::vec3 n_1 = m_vertexNormals[tri.v_1];
+    const glm::vec3 n_2 = m_vertexNormals[tri.v_2];
+    const glm::vec3 n_3 = m_vertexNormals[tri.v_3];
+    const glm::vec3 v_1 = m_vertices[tri.v_1];
+    const glm::vec3 v_2 = m_vertices[tri.v_2];
+    const glm::vec3 v_3 = m_vertices[tri.v_3];
 
-//    const Tri tri = m_triangles[triIndex];
-//    const glm::vec3 n_1 = m_vertexNormals[tri.v_1];
-//    const glm::vec3 n_2 = m_vertexNormals[tri.v_2];
-//    const glm::vec3 n_3 = m_vertexNormals[tri.v_3];
-//    const glm::vec3 v_1 = m_vertices[tri.v_1];
-//    const glm::vec3 v_2 = m_vertices[tri.v_2];
-//    const glm::vec3 v_3 = m_vertices[tri.v_3];
+    float triangleArea2 = glm::length(glm::cross(v_2 - v_1, v_3 - v_2));
 
-//    float triangleArea2 = glm::length(glm::cross(v_2 - v_1, v_3 - v_2));
+    float subtriangleArea2 = glm::length(glm::cross(point - v_1, v_3 - point));
+    float u = subtriangleArea2 / triangleArea2;
 
-//    float subtriangleArea2 = glm::length(glm::cross(point - v_1, v_3 - point));
-//    float u = subtriangleArea2 / triangleArea2;
+    subtriangleArea2 = glm::length(glm::cross(v_2 - v_1, point - v_2));
+    float v = subtriangleArea2 / triangleArea2;
 
-//    subtriangleArea2 = glm::length(glm::cross(v_2 - v_1, point - v_2));
-//    float v = subtriangleArea2 / triangleArea2;
+    float w = 1.f - u - v;
 
-//    float w = 1.f - u - v;
-
-//    return glm::normalize(u * n_2 + v * n_3 + w * n_1);
+    return glm::normalize(u * n_2 + v * n_3 + w * n_1);
 }
 
 std::unique_ptr<glm::vec2> MeshIShape::parameterize(glm::vec3 &point) const {
@@ -132,14 +127,14 @@ std::unique_ptr<glm::vec2> MeshIShape::parameterize(glm::vec3 &point) const {
 }
 
 void MeshIShape::loadVertexTriangles() {
-//    m_vertexTriangles.clear();
-//    m_vertexTriangles.resize(m_vertices.size());
-//    for (int triIndex = 0; triIndex < m_triangles.size(); triIndex++) {
-//        const Tri tri = m_triangles[triIndex];
-//        m_vertexTriangles[tri.v_1].push_back(triIndex);
-//        m_vertexTriangles[tri.v_2].push_back(triIndex);
-//        m_vertexTriangles[tri.v_3].push_back(triIndex);
-//    }
+    m_vertexTriangles.clear();
+    m_vertexTriangles.resize(m_vertices.size());
+    for (int triIndex = 0; triIndex < m_triangles.size(); triIndex++) {
+        const Tri tri = m_triangles[triIndex];
+        m_vertexTriangles[tri.v_1].push_back(triIndex);
+        m_vertexTriangles[tri.v_2].push_back(triIndex);
+        m_vertexTriangles[tri.v_3].push_back(triIndex);
+    }
 }
 
 void MeshIShape::loadVertexNormals() {
@@ -149,15 +144,15 @@ void MeshIShape::loadVertexNormals() {
         m_triangleNormals.push_back(getTriangleNormal(tri));
     }
 
-//    m_vertexNormals.clear();
-//    m_vertexNormals.reserve(m_vertices.size());
-//    for (int i = 0; i < m_vertices.size(); i++) {
-//        glm::vec3 normal(0);
-//        for (const int triIndex : m_vertexTriangles[i]) {
-//            normal += m_triangleNormals[triIndex];
-//        }
-//        m_vertexNormals.push_back(glm::normalize(normal));
-//    }
+    m_vertexNormals.clear();
+    m_vertexNormals.reserve(m_vertices.size());
+    for (int i = 0; i < m_vertices.size(); i++) {
+        glm::vec3 normal(0);
+        for (const int triIndex : m_vertexTriangles[i]) {
+            normal += m_triangleNormals[triIndex];
+        }
+        m_vertexNormals.push_back(glm::normalize(normal));
+    }
 
     for (int i = 0; i < m_triangleNormals.size(); i++) {
         m_triangleNormals[i] = glm::normalize(m_triangleNormals[i]);
@@ -188,18 +183,18 @@ void MeshIShape::loadCube() {
     for (int i = 0; i < triangles.size(); i++) {
         triangles[i] = Tri(111, 111, 111);
     }
-//    triangles[0] = Tri(0, 2, 1);
+    triangles[0] = Tri(0, 2, 1);
     triangles[1] = Tri(0, 3, 2);
-//    triangles[2] = Tri(3, 6, 2);
-//    triangles[3] = Tri(3, 7, 6);
+    triangles[2] = Tri(3, 6, 2);
+    triangles[3] = Tri(3, 7, 6);
     triangles[4] = Tri(4, 7, 0);
     triangles[5] = Tri(0, 7, 3);
-//    triangles[6] = Tri(4, 6, 7);
-//    triangles[7] = Tri(4, 5, 6);
-//    triangles[8] = Tri(0, 5, 4);
-//    triangles[9] = Tri(0, 1, 5);
-//    triangles[10] = Tri(1, 6, 5);
-//    triangles[11] = Tri(1, 2, 6);
+    triangles[6] = Tri(4, 6, 7);
+    triangles[7] = Tri(4, 5, 6);
+    triangles[8] = Tri(0, 5, 4);
+    triangles[9] = Tri(0, 1, 5);
+    triangles[10] = Tri(1, 6, 5);
+    triangles[11] = Tri(1, 2, 6);
 
     m_triangles = triangles;
     m_vertices = vertices;

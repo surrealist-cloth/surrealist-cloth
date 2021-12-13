@@ -15,7 +15,7 @@ CylinderIShape::CylinderIShape()
     m_bottom = std::make_unique<CircleIShape>(-0.5, -1);
 }
 
-std::vector<IntersectionCandidate> CylinderIShape::intersect(Ray &ray) const
+std::vector<IntersectionCandidate> CylinderIShape::intersect(const Ray& ray) const
 {
     // intersect top circle
     std::vector<IntersectionCandidate> ts = m_top->allIntersect(ray);
@@ -32,7 +32,7 @@ std::vector<IntersectionCandidate> CylinderIShape::intersect(Ray &ray) const
     for (float t: bodyTs) {
         float y = ray.getPoint(t).y;
         if ((y <= 0.5) && (y >= -0.5)) {
-                    ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point) {
+                    ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
                                  return glm::vec3(2 * point.x, 0, 2 * point.z);
                                  }
                                  ));

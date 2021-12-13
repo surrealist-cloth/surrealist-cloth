@@ -8,7 +8,7 @@ EmptyIShape::EmptyIShape()
 
 }
 
-std::vector<IntersectionCandidate> EmptyIShape::intersect(Ray& ray) const
+std::vector<IntersectionCandidate> EmptyIShape::intersect(const Ray& ray) const
 {
     return std::vector<IntersectionCandidate>();
 }

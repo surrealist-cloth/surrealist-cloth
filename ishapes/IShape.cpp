@@ -8,7 +8,7 @@
 #include "scenegraph/RayScene.h"
 #include <algorithm>
 
-std::unique_ptr<IntersectionCandidate> IShape::closestIntersect(Ray& ray) const {
+std::unique_ptr<IntersectionCandidate> IShape::closestIntersect(const Ray& ray) const {
     std::vector<IntersectionCandidate> intersections = allIntersect(ray);
     if (intersections.size() == 0) return std::unique_ptr<IntersectionCandidate>{};
     IntersectionCandidate intersection = *std::min_element(intersections.begin(), intersections.end(),
@@ -19,7 +19,7 @@ std::unique_ptr<IntersectionCandidate> IShape::closestIntersect(Ray& ray) const 
     return std::make_unique<IntersectionCandidate>(intersection);
 }
 
-std::vector<IntersectionCandidate> IShape::allIntersect(Ray &ray) const
+std::vector<IntersectionCandidate> IShape::allIntersect(const Ray &ray) const
 {
     std::vector<IntersectionCandidate> ts;
     std::vector<IntersectionCandidate> allTs = intersect(ray);

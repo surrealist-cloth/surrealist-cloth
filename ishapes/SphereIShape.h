@@ -15,7 +15,7 @@ public:
     virtual ~SphereIShape() {};
     std::unique_ptr<glm::vec2> parameterize(glm::vec3& point) const override;
 protected:
-    std::vector<IntersectionCandidate> intersect(Ray& ray) const override;
+    std::vector<IntersectionCandidate> intersect(const Ray& ray) const override;
 };
 
 #endif // SPHEREISHAPE_H
