@@ -31,34 +31,25 @@ public:
 protected:
     std::vector<IntersectionCandidate> intersect(Ray& ray) const override;
 private:
-    std::vector<IntersectionCandidate> intersectTriangle(int triIndex, Ray &ray) const;
+    inline std::unique_ptr<IntersectionCandidate> intersectTriangle(int index, const Ray &ray) const;
 
+    void pruneInvalidTriangles();
     void loadVertexTriangles();
+    void loadVertexNormals();
 
-    float getInterpolationWeight(int triIndex) const;
-    glm::vec3 getVertexNormal(int vertIndex) const;
-    glm::vec3 getTriangleNormal(int triIndex) const;  // Returns unnormalized Normal!
-    bool isWithinTriangle(int triIndex, glm::vec3 &point) const;
-
-    glm::vec3 getNormal(int triIndex, glm::vec3 point) const;
-    glm::vec3 getNormalLowPoly(int triIndex, glm::vec3 point) const;
-    glm::vec3 getNormalAvrg(int triIndex, glm::vec3 point) const;
+    inline glm::vec3 getTriangleNormal(const Tri &tri) const;
     glm::vec3 getNormalBarycentric(int triIndex, glm::vec3 point) const;
 
     void loadDummyCloth();
     void loadTwoTriangles();
     void loadCube();
 
-    bool validTri(int triIndex) const; //true if good index
-    bool validVert(int vertIndex) const; //true if good index
-
     std::vector<glm::vec3> m_vertices;
     std::vector<Tri> m_triangles; //point to verts
 
     std::vector<glm::vec3> m_vertexNormals; // might not even need this
     std::vector<std::vector<int>> m_vertexTriangles; // given a vertex, what triangles include it?
-
-    //std::vector<glm::vec3> m_triangleNormals; //point to verts compute this in constructor
+    std::vector<glm::vec3> m_triangleNormals; //point to verts compute this in constructor
 };
 
 #endif // MESHISHAPE_H

@@ -31,13 +31,9 @@ MeshIShape::MeshIShape(std::string meshfile) {
     } else {
         loadDummyCloth();
     }
-
-
-    //Qt3D::ObjLoader objL = ObjLoader();
-
-    //call objloader, ask for its object
-    //examine attributes for triangles (maybe faces; primitive layout)
-    // query geometry given its attributes
+    pruneInvalidTriangles();
+    loadVertexTriangles();
+    loadVertexNormals();
 }
 
 MeshIShape::MeshIShape() {
@@ -46,12 +42,9 @@ MeshIShape::MeshIShape() {
 MeshIShape::MeshIShape(std::vector<glm::vec3> vertices, std::vector<Tri> triangles):
     m_vertices(vertices), m_triangles(triangles)
 {   
-    //loadTriangles();
-    m_vertexTriangles.resize(vertices.size());
-    m_vertexNormals.resize(vertices.size());
+    pruneInvalidTriangles();
     loadVertexTriangles();
-
-    assert(m_vertices.size() == m_vertexTriangles.size());
+    loadVertexNormals();
 }
 
 
@@ -60,140 +53,80 @@ std::vector<IntersectionCandidate> MeshIShape::intersect(Ray &ray) const {
     std::vector<IntersectionCandidate> ts;
 
     for (int i = 0; i < m_triangles.size(); i++) {
-
-        for (IntersectionCandidate &i : intersectTriangle(i, ray) ) {
-             ts.push_back(i);
+        std::unique_ptr<IntersectionCandidate> t = intersectTriangle(i, ray);
+        if (t) {
+            ts.push_back(*t);
         }
-
     }
     return ts;
 }
 
 
 
-std::vector<IntersectionCandidate> MeshIShape::intersectTriangle(int triIndex, Ray &ray) const {
-    std::vector<IntersectionCandidate> ts;
+std::unique_ptr<IntersectionCandidate> MeshIShape::intersectTriangle(int index, const Ray &ray) const {
+    const Tri& tri = m_triangles[index];
+    const glm::vec3& v_1 = m_vertices[tri.v_1];
+    const glm::vec3& v_2 = m_vertices[tri.v_2];
+    const glm::vec3& v_3 = m_vertices[tri.v_3];
+    const glm::vec3& n = m_triangleNormals[index];
 
-    if (!validTri(triIndex)) {
-        return ts;
-    }
 
-    glm::vec3 v_1 = m_vertices[m_triangles[triIndex].v_1];
-    glm::vec3 v_2 = m_vertices[m_triangles[triIndex].v_2];
-    glm::vec3 v_3 = m_vertices[m_triangles[triIndex].v_3];
+    float d = glm::dot(n, v_1);
+    float denom = glm::dot(n, ray.dir);
+    // denom is 0 if ray is parallel to triangle
+    if (glm::epsilonEqual(denom, 0.f, EPSILON)) return std::unique_ptr<IntersectionCandidate>(nullptr);
 
-    if (v_1 == v_2 || v_2 == v_3 || v_3 == v_1) { //check if Tri has surface
-        return ts;
-    }
-
-    float t;
-    float d = glm::dot(getTriangleNormal(triIndex), v_1);
-
-    // find point p + dt on the triangle's plane
-    if (glm::epsilonEqual(glm::dot(getTriangleNormal(triIndex), ray.dir), 0.0f, EPSILON)) { // check d not parallel to plane
-        return ts;
-    }
-    t = (d - glm::dot(getTriangleNormal(triIndex), ray.eye)) / (glm::dot(getTriangleNormal(triIndex), ray.dir));
+    float t = -(glm::dot(m_triangleNormals[index], ray.eye) + d) / denom;
+    glm::vec3 contact = ray.getPoint(t);
 
     // check if ray intersection with plane is inside triangle
     // (if on inside line of all edges by checking normal's direction)
-    if (glm::dot(glm::cross(v_2 - v_1, (ray.eye + t * ray.dir) - v_1), getTriangleNormal(triIndex)) < 0) {
-        return ts;
-    }
-    if (glm::dot(glm::cross(v_3 - v_2, (ray.eye + t * ray.dir) - v_2), getTriangleNormal(triIndex)) < 0) {
-        return ts;
-    }
-    if (glm::dot(glm::cross(v_1 - v_3, (ray.eye + t * ray.dir) - v_3), getTriangleNormal(triIndex)) < 0) {
-        return ts;
+    if (glm::dot(n, glm::cross(v_2 - v_1, contact - v_1)) < 0 ||
+            glm::dot(n, glm::cross(v_3 - v_2, contact - v_2)) < 0 ||
+            glm::dot(n, glm::cross(v_1 - v_3, contact - v_3)) < 0) {
+        return std::unique_ptr<IntersectionCandidate>(nullptr);
     }
 
-    ts.push_back(IntersectionCandidate(t, [&](glm::vec3 point){
-                                                            return glm::normalize(getTriangleNormal(triIndex));
-                                      })
-                );
-    return ts;
+
+    return std::make_unique<IntersectionCandidate>(t,
+                                                   [&](glm::vec3 point){ return getNormalBarycentric(index, point);});
 }
 
-glm::vec3 MeshIShape::getNormal(int triIndex, glm::vec3 point) const {
-    return getNormalLowPoly(triIndex, point);
-}
-
-glm::vec3 MeshIShape::getNormalLowPoly(int triIndex, glm::vec3 point) const {
-
-    if (!validTri(triIndex) || !isWithinTriangle(triIndex, point)) {
-        return glm::vec3(0.0f, 0.0f, 1.0f);
+void MeshIShape::pruneInvalidTriangles()
+{
+    std::vector<Tri> triangles;
+    triangles.reserve(m_triangles.size());
+    for (Tri tri : m_triangles) {
+        if (m_vertices.size() < tri.v_1 || m_vertices.size() < tri.v_2
+              || m_vertices.size() < tri.v_3) {
+            std::cerr << "Invalid triangle. Skipping" << std::endl;
+            continue;
+        }
+        triangles.push_back(tri);
     }
-
-    glm::vec3 n_1 = getVertexNormal(m_triangles[triIndex].v_1);
-    glm::vec3 n_2 = getVertexNormal(m_triangles[triIndex].v_2);
-    glm::vec3 n_3 = getVertexNormal(m_triangles[triIndex].v_3);
-
-    return getTriangleNormal(triIndex);
-}
-
-glm::vec3 MeshIShape::getNormalAvrg(int triIndex, glm::vec3 point) const {
-    if (!validTri(triIndex) || !isWithinTriangle(triIndex, point)) {
-        return glm::vec3(0.0f, 0.0f, 1.0f);
-    }
-
-    glm::vec3 n_1 = getVertexNormal(m_triangles[triIndex].v_1);
-    glm::vec3 n_2 = getVertexNormal(m_triangles[triIndex].v_2);
-    glm::vec3 n_3 = getVertexNormal(m_triangles[triIndex].v_3);
-
-    glm::vec3 p_v1 = m_vertices[m_triangles[triIndex].v_1] - point;
-    glm::vec3 p_v2 = m_vertices[m_triangles[triIndex].v_2] - point;
-    glm::vec3 p_v3 = m_vertices[m_triangles[triIndex].v_3] - point;
-
-    glm::vec3 distances = glm::vec3(
-                                    sqrt(pow(p_v1.x, 2) + pow(p_v1.y, 2) + pow(p_v1.z, 2)),
-                                    sqrt(pow(p_v2.x, 2) + pow(p_v2.y, 2) + pow(p_v2.z, 2)),
-                                    sqrt(pow(p_v3.x, 2) + pow(p_v3.y, 2) + pow(p_v3.z, 2))
-                          ); // by normalizing this, I can have weights add to 1
-
-    distances = glm::normalize(distances);
-
-    glm::vec3 n_point = (1 - distances.z) * n_1 + (1 - distances.y) * n_2 + (1 - distances.z) * n_3;
-
-    // TODO: compute weighted average of these points
-    //      by converting from Cartesian coords to barycentric
-
-    return n_point;
+    m_triangles = triangles;
 }
 
 glm::vec3 MeshIShape::getNormalBarycentric(int triIndex, glm::vec3 point) const {
-    if (!validTri(triIndex) || !isWithinTriangle(triIndex, point)) {
-        return glm::vec3(0.0f, 0.0f, 1.0f);
-    }
-    glm::vec3 n_1 = getVertexNormal(m_triangles[triIndex].v_1);
-    glm::vec3 n_2 = getVertexNormal(m_triangles[triIndex].v_2);
-    glm::vec3 n_3 = getVertexNormal(m_triangles[triIndex].v_3);
+    const Tri& tri = m_triangles[triIndex];
+    const glm::vec3& n_1 = m_vertexNormals[tri.v_1];
+    const glm::vec3& n_2 = m_vertexNormals[tri.v_2];
+    const glm::vec3& n_3 = m_vertexNormals[tri.v_3];
+    const glm::vec3& v_1 = m_vertices[tri.v_1];
+    const glm::vec3& v_2 = m_vertices[tri.v_2];
+    const glm::vec3& v_3 = m_vertices[tri.v_3];
 
-    //TODO: compute weighted average of these points
-    //      by converting from Cartesian coords to barycentric
+    float triangleArea2 = glm::length(glm::cross(v_2 - v_1, v_3 - v_2));
 
-    return glm::vec3(0.0f, 0.0f, 1.0f);
-}
+    float subtriangleArea2 = glm::length(glm::cross(point - v_1, v_3 - point));
+    float u = subtriangleArea2 / triangleArea2;
 
-bool MeshIShape::isWithinTriangle(int triIndex, glm::vec3 &point) const {
-    if (!validTri(triIndex)) {
-        return false;
-    }
+    subtriangleArea2 = glm::length(glm::cross(v_2 - v_1, point - v_2));
+    float v = subtriangleArea2 / triangleArea2;
 
-    glm::vec3 v_1 = m_vertices[m_triangles[triIndex].v_1];
-    glm::vec3 v_2 = m_vertices[m_triangles[triIndex].v_2];
-    glm::vec3 v_3 = m_vertices[m_triangles[triIndex].v_3];
-    glm::vec3 n = glm::normalize(getTriangleNormal(triIndex));
+    float w = 1.f - u - v;
 
-    if (glm::dot(glm::cross(v_2 - v_1, (point) - v_1), n) < 0) {
-        return false;
-    }
-    if (glm::dot(glm::cross(v_3 - v_2, (point) - v_2), n) < 0) {
-        return false;
-    }
-    if (glm::dot(glm::cross(v_1 - v_3, (point) - v_3), n) < 0) {
-        return false;
-    }
-    return true;
+    return u * n_2 + v * n_3 + w * n_1;
 }
 
 std::unique_ptr<glm::vec2> MeshIShape::parameterize(glm::vec3 &point) const {
@@ -201,50 +134,41 @@ std::unique_ptr<glm::vec2> MeshIShape::parameterize(glm::vec3 &point) const {
 }
 
 void MeshIShape::loadVertexTriangles() {
+    m_vertexTriangles.clear();
+    m_vertexTriangles.resize(m_vertices.size());
     for (int triIndex = 0; triIndex < m_triangles.size(); triIndex++) {
-        if (validTri(triIndex)) {
-            Tri tri = m_triangles[triIndex];
-            m_vertexTriangles[tri.v_1].push_back(triIndex);
-            m_vertexTriangles[tri.v_2].push_back(triIndex);
-            m_vertexTriangles[tri.v_3].push_back(triIndex);
+        Tri tri = m_triangles[triIndex];
+        m_vertexTriangles[tri.v_1].push_back(triIndex);
+        m_vertexTriangles[tri.v_2].push_back(triIndex);
+        m_vertexTriangles[tri.v_3].push_back(triIndex);
+    }
+}
+
+void MeshIShape::loadVertexNormals() {
+    m_triangleNormals.reserve(m_triangles.size());
+
+    for (Tri tri: m_triangles) {
+        m_triangleNormals.push_back(getTriangleNormal(tri));
+    }
+
+    m_vertexNormals.clear();
+    m_vertexNormals.reserve(m_vertices.size());
+    for (int i = 0; i < m_vertices.size(); i++) {
+        glm::vec3 normal(0);
+        for (int triIndex : m_vertexTriangles[i]) {
+            normal += m_triangleNormals[triIndex];
         }
+        m_vertexNormals.push_back(glm::normalize(normal));
+    }
+
+    for (int i = 0; i < m_triangleNormals.size(); i++) {
+        m_triangleNormals[i] = glm::normalize(m_triangleNormals[i]);
     }
 }
 
-
-glm::vec3 MeshIShape::getVertexNormal(int vertIndex) const {
-    if (!validVert(vertIndex)) {
-        return glm::vec3(0.0f, 0.0f, 0.0f);
-    }
-
-    glm::vec3 n_v = glm::vec3(0.0f, 0.0f, 0.0f);
-
-    for (int neighbourTriIndex : m_vertexTriangles[vertIndex]) {
-        glm::vec3 neighbourTriNormal = getTriangleNormal(neighbourTriIndex);
-         n_v = n_v + getInterpolationWeight(neighbourTriIndex) * neighbourTriNormal;
-    }
-    return n_v;
-}
-
-float MeshIShape::getInterpolationWeight(int triIndex) const {
-    if (!validTri(triIndex)) {
-        return 0.0f;
-    }
-
-    glm::vec3 normal = getTriangleNormal(triIndex); // not normalized
-    float normalLength = sqrt(pow(normal.x, 2) + pow(normal.y, 2) + pow(normal.z, 2));
-    return 0.5f * normalLength;
-}
-
-glm::vec3 MeshIShape::getTriangleNormal(int triIndex) const { //Returns unnormalized Normal!
-    if (!validTri(triIndex)) {
-        return glm::vec3(0.0f, 0.0f, 0.0f);
-    }
-    glm::vec3 dist1 = m_vertices[m_triangles[triIndex].v_2]
-                                    - m_vertices[m_triangles[triIndex].v_1];
-    glm::vec3 dist2 = m_vertices[m_triangles[triIndex].v_3]
-                                    - m_vertices[m_triangles[triIndex].v_1];
-    return glm::cross(dist1, dist2);
+glm::vec3 MeshIShape::getTriangleNormal(const Tri &tri) const { //Returns unnormalized Normal!
+    return glm::cross(m_vertices[tri.v_2] - m_vertices[tri.v_1],
+            m_vertices[tri.v_3] - m_vertices[tri.v_2]);
 }
 
 void MeshIShape::loadCube() {
@@ -276,14 +200,8 @@ void MeshIShape::loadCube() {
     triangles[10] = Tri(1, 6, 5);
     triangles[11] = Tri(1, 2, 6);
 
-
-    m_vertexNormals.resize(vertices.size());
-    m_vertexTriangles.resize(vertices.size());
-
     m_triangles = triangles;
     m_vertices = vertices;
-    loadVertexTriangles();
-    assert(m_vertices.size() == m_vertexTriangles.size());
 }
 
 void MeshIShape::loadTwoTriangles() {
@@ -302,15 +220,8 @@ void MeshIShape::loadTwoTriangles() {
     triangles[0] = Tri(2, 3, 0);
     triangles[1] = Tri(3, 4, 1);
 
-
-    m_vertexNormals.resize(vertices.size());
-    m_vertexTriangles.resize(vertices.size());
-
     m_vertices = vertices;
     m_triangles = triangles;
-
-    loadVertexTriangles();
-    assert(m_vertices.size() == m_vertexTriangles.size());
 }
 
 void MeshIShape::loadDummyCloth() {
@@ -334,33 +245,12 @@ void MeshIShape::loadDummyCloth() {
 
     vertices[3] = glm::vec3(-0.5f, 0.0f, 0.0f);
     vertices[4] = glm::vec3( 0.0f, 0.0f, 0.0f);
-    vertices[5] = glm::vec3( 0.5f, 0.0f, 0.0f);
+    vertices[5] = glm::vec3( 0.5f, 0.0f, -0.5f);
 
     vertices[6] = glm::vec3(-0.5f,-0.5f, 0.0f);
     vertices[7] = glm::vec3( 0.0f,-0.5f, 0.0f);
     vertices[8] = glm::vec3( 0.5f,-0.5f, 0.0f);
 
-    m_vertexNormals.resize(vertices.size());
-    m_vertexTriangles.resize(vertices.size());
-
     m_triangles = triangles;
     m_vertices = vertices;
-    loadVertexTriangles();
-    assert(m_vertices.size() == m_vertexTriangles.size());
-}
-
-bool MeshIShape::validTri(int triIndex) const {
-    if (triIndex < 0 || m_triangles.size() <= triIndex
-            || m_vertices.size() < m_triangles[triIndex].v_1 || m_vertices.size() < m_triangles[triIndex].v_2
-            || m_vertices.size() < m_triangles[triIndex].v_3) {
-        return false;
-    }
-    return true;
-}
-
-bool MeshIShape::validVert(int vertIndex) const {
-    if (vertIndex < 0 || m_vertices.size() <= vertIndex) {
-        return false;
-    }
-    return true;
 }
