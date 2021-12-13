@@ -29,13 +29,12 @@ MeshIShape::MeshIShape(std::string meshfile) {
     if (loader.hasNormals) {
         m_normals = loader.m_normals;
         m_vertexNormals = loader.m_vertexNormals;
-
-    } else {
-        loadVertexNormals();
         m_triangleNormals.reserve(m_triangles.size());
         for (const Tri tri: m_triangles) {
             m_triangleNormals.push_back(glm::normalize(getTriangleNormal(tri)));
         }
+    } else {
+        loadVertexNormals();
     }
 }
 
@@ -52,9 +51,11 @@ MeshIShape::MeshIShape(std::vector<glm::vec3> vertices, std::vector<Tri> triangl
 std::vector<IntersectionCandidate> MeshIShape::intersect(const Ray& ray) const {
     std::vector<IntersectionCandidate> ts;
 
+    #pragma omp parallel for
     for (int i = 0; i < m_triangles.size(); i++) {
         std::unique_ptr<IntersectionCandidate> t = intersectTriangle(i, ray);
         if (t) {
+            #pragma omp atomic
             ts.push_back(*t);
         }
     }

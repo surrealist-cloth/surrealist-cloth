@@ -332,14 +332,11 @@ std::unique_ptr<ShapeIntersection> RayScene::intersect(Ray& ray)
     }
     glm::vec3 intersection = ray.getPoint(matchT);
     matchNormal = glm::normalize(glm::transpose(glm::mat3(invTransformations[matchI])) * matchNormal);
-    if (fabs(matchNormal.z) > 0.9) {
-        int i =0;
-    }
     // if the normal and the ray form an acute angle, then we should flip the normal, since
     // the ray is coming from the inside of the object
-    bool isInside = glm::dot(ray.dir, normal) > 0;
-    if (isInside) normal = -normal;
+    bool isInside = glm::dot(ray.dir, matchNormal) > 0;
+    if (isInside) matchNormal = -matchNormal;
 
-    return std::make_unique<ShapeIntersection>(matchT, intersection, normal, primitives[matchI], m_ishapes[matchI], invTransformations[matchI], isInside);
+    return std::make_unique<ShapeIntersection>(matchT, intersection, matchNormal, primitives[matchI], *m_ishapes[matchI], invTransformations[matchI], isInside);
 }
 

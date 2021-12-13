@@ -6,7 +6,7 @@
 	</globaldata>
 
 	<cameradata>
-		<pos x="0" y="5" z="5"/>
+		<pos x="2" y="2" z="5"/>
 		<focus x="0" y="0" z="0"/>
 		<up x="0" y="1" z="0"/>
 		<heightangle v="45"/>
@@ -14,27 +14,17 @@
 
 	<lightdata>
 		<id v="1"/>
-		<position x="0" y="0" z="0"/>
+		<position x="2" y="2" z="5"/>
 		<color r="1" g="1" b="1"/>
 	</lightdata>
 
 	<object type="tree" name="root">
 		<transblock>
-			<translate x="0" y="0" z="-2"/>
-			<object type="tree">
-
-                
-                <transblock>
-                    <translate x="0" y="1" z="0"/>
-                    <object type="primitive" name="mesh" meshfile ="triangles">
-                        <diffuse r=".3" g=".3" b="1"/>
-                    </object>
-                </transblock>
-
-
+			<translate x="0" y="1" z="0"/>
+			<object type="primitive" name="mesh" meshfile="/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data/meshTest.obj">
+				<diffuse r=".3" g=".3" b="1"/>
 			</object>
 		</transblock>
 	</object>
 
 </scenefile>
-

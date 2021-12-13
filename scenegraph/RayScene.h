@@ -15,8 +15,8 @@
 #include "ishapes/IShape.h"
 
 
-#define MAX_RECURSION 4
-#define MIN_INTENSITY 0.005
+#define MAX_RECURSION 5
+#define MIN_INTENSITY 0.0001
 
 /**
  * @class RayScene

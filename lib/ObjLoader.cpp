@@ -36,17 +36,26 @@ ObjLoader::ObjLoader(std::string filePath)
         std::string lineHeader = line.substr(0, splitIndex);
         if (splitIndex == std::string::npos) continue;
         std::vector<std::string> parts = split(line.substr(splitIndex+1), " ");
-        if (parts.size() != 3) {
-            std::cerr << "Unparseable file format" << std::endl;
-            return;
-        }
+
         if (lineHeader == "v") {
+            if (parts.size() != 3) {
+                std::cerr << "Unparseable file format" << std::endl;
+                return;
+            }
             glm::vec3 vertex(std::stof(parts[0]), std::stof(parts[1]), std::stof(parts[2]));
             m_vertices.push_back(vertex);
         } else if (lineHeader == "vn") {
+            if (parts.size() != 3) {
+                std::cerr << "Unparseable file format" << std::endl;
+                return;
+            }
             glm::vec3 normal(std::stof(parts[0]), std::stof(parts[1]), std::stof(parts[2]));
             m_vertexNormals.push_back(normal);
         } else if (lineHeader == "f") {
+            if (parts.size() != 3) {
+                std::cerr << "Unparseable file format" << std::endl;
+                return;
+            }
             std::vector<std::string> parts1 = split(parts[0], "/");
             std::vector<std::string> parts2 = split(parts[1], "/");
             std::vector<std::string> parts3 = split(parts[2], "/");
