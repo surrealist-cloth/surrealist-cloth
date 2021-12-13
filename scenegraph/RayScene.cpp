@@ -19,8 +19,6 @@
 RayScene::RayScene(Scene &scene) :
     Scene(scene)
 {
-    std::unique_ptr<MeshIShape> m = std::make_unique<MeshIShape>(); //DEBUG: m_b and m_c are not initalized here, even if they are in the constructor
-
     // TODO [INTERSECT]
     // Remember that any pointers or OpenGL objects (e.g. texture IDs) will
     // be deleted when the old scene is deleted (assuming you are managing

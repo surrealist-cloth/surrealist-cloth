@@ -36,9 +36,6 @@ MeshIShape::MeshIShape(std::string meshfile) {
     loadVertexNormals();
 }
 
-MeshIShape::MeshIShape() {
-}
-
 MeshIShape::MeshIShape(std::vector<glm::vec3> vertices, std::vector<Tri> triangles):
     m_vertices(vertices), m_triangles(triangles)
 {   
@@ -65,16 +62,16 @@ std::vector<IntersectionCandidate> MeshIShape::intersect(Ray &ray) const {
 
 std::unique_ptr<IntersectionCandidate> MeshIShape::intersectTriangle(int index, const Ray &ray) const {
     const Tri& tri = m_triangles[index];
-    const glm::vec3& v_1 = m_vertices[tri.v_1];
-    const glm::vec3& v_2 = m_vertices[tri.v_2];
-    const glm::vec3& v_3 = m_vertices[tri.v_3];
-    const glm::vec3& n = m_triangleNormals[index];
+    const glm::vec3 v_1 = m_vertices[tri.v_1];
+    const glm::vec3 v_2 = m_vertices[tri.v_2];
+    const glm::vec3 v_3 = m_vertices[tri.v_3];
+    const glm::vec3 n = m_triangleNormals[index];
 
 
     float d = glm::dot(n, v_1);
     float denom = glm::dot(n, ray.dir);
     // denom is 0 if ray is parallel to triangle
-    if (glm::epsilonEqual(denom, 0.f, EPSILON)) return std::unique_ptr<IntersectionCandidate>(nullptr);
+    if (denom == 0.f) return std::unique_ptr<IntersectionCandidate>(nullptr);
 
     float t = -(glm::dot(m_triangleNormals[index], ray.eye) + d) / denom;
     glm::vec3 contact = ray.getPoint(t);
@@ -86,6 +83,11 @@ std::unique_ptr<IntersectionCandidate> MeshIShape::intersectTriangle(int index, 
             glm::dot(n, glm::cross(v_1 - v_3, contact - v_3)) < 0) {
         return std::unique_ptr<IntersectionCandidate>(nullptr);
     }
+
+    // remove back facing triangles
+    if (glm::dot(n, ray.dir) > 0.f) {
+        return std::unique_ptr<IntersectionCandidate>(nullptr)
+;    }
 
 
     return std::make_unique<IntersectionCandidate>(t,
@@ -108,13 +110,15 @@ void MeshIShape::pruneInvalidTriangles()
 }
 
 glm::vec3 MeshIShape::getNormalBarycentric(int triIndex, glm::vec3 point) const {
-    const Tri& tri = m_triangles[triIndex];
-    const glm::vec3& n_1 = m_vertexNormals[tri.v_1];
-    const glm::vec3& n_2 = m_vertexNormals[tri.v_2];
-    const glm::vec3& n_3 = m_vertexNormals[tri.v_3];
-    const glm::vec3& v_1 = m_vertices[tri.v_1];
-    const glm::vec3& v_2 = m_vertices[tri.v_2];
-    const glm::vec3& v_3 = m_vertices[tri.v_3];
+    return m_triangleNormals[triIndex];
+
+    const Tri tri = m_triangles[triIndex];
+    const glm::vec3 n_1 = m_vertexNormals[tri.v_1];
+    const glm::vec3 n_2 = m_vertexNormals[tri.v_2];
+    const glm::vec3 n_3 = m_vertexNormals[tri.v_3];
+    const glm::vec3 v_1 = m_vertices[tri.v_1];
+    const glm::vec3 v_2 = m_vertices[tri.v_2];
+    const glm::vec3 v_3 = m_vertices[tri.v_3];
 
     float triangleArea2 = glm::length(glm::cross(v_2 - v_1, v_3 - v_2));
 
@@ -126,7 +130,7 @@ glm::vec3 MeshIShape::getNormalBarycentric(int triIndex, glm::vec3 point) const 
 
     float w = 1.f - u - v;
 
-    return u * n_2 + v * n_3 + w * n_1;
+    return glm::normalize(u * n_2 + v * n_3 + w * n_1);
 }
 
 std::unique_ptr<glm::vec2> MeshIShape::parameterize(glm::vec3 &point) const {
@@ -137,7 +141,7 @@ void MeshIShape::loadVertexTriangles() {
     m_vertexTriangles.clear();
     m_vertexTriangles.resize(m_vertices.size());
     for (int triIndex = 0; triIndex < m_triangles.size(); triIndex++) {
-        Tri tri = m_triangles[triIndex];
+        const Tri tri = m_triangles[triIndex];
         m_vertexTriangles[tri.v_1].push_back(triIndex);
         m_vertexTriangles[tri.v_2].push_back(triIndex);
         m_vertexTriangles[tri.v_3].push_back(triIndex);
@@ -147,7 +151,7 @@ void MeshIShape::loadVertexTriangles() {
 void MeshIShape::loadVertexNormals() {
     m_triangleNormals.reserve(m_triangles.size());
 
-    for (Tri tri: m_triangles) {
+    for (const Tri tri: m_triangles) {
         m_triangleNormals.push_back(getTriangleNormal(tri));
     }
 
@@ -155,7 +159,7 @@ void MeshIShape::loadVertexNormals() {
     m_vertexNormals.reserve(m_vertices.size());
     for (int i = 0; i < m_vertices.size(); i++) {
         glm::vec3 normal(0);
-        for (int triIndex : m_vertexTriangles[i]) {
+        for (const int triIndex : m_vertexTriangles[i]) {
             normal += m_triangleNormals[triIndex];
         }
         m_vertexNormals.push_back(glm::normalize(normal));
@@ -166,9 +170,9 @@ void MeshIShape::loadVertexNormals() {
     }
 }
 
-glm::vec3 MeshIShape::getTriangleNormal(const Tri &tri) const { //Returns unnormalized Normal!
+glm::vec3 MeshIShape::getTriangleNormal(const Tri tri) const { //Returns unnormalized Normal!
     return glm::cross(m_vertices[tri.v_2] - m_vertices[tri.v_1],
-            m_vertices[tri.v_3] - m_vertices[tri.v_2]);
+            m_vertices[tri.v_3] - m_vertices[tri.v_1]);
 }
 
 void MeshIShape::loadCube() {
@@ -211,11 +215,11 @@ void MeshIShape::loadTwoTriangles() {
     vertices.resize(5);
     triangles.resize(2);
 
-    vertices[0] = glm::vec3(-0.25f, 0.5f , 0.0f);
-    vertices[1] = glm::vec3( 0.25f, 0.5f , 0.0f);
+    vertices[0] = glm::vec3(-0.25f, 0.5f , 0.5f);
+    vertices[1] = glm::vec3( 0.25f, 0.4f , 0.0f);
     vertices[2] = glm::vec3(-0.5f , 0.0f , 0.0f);
     vertices[3] = glm::vec3( 0.0f , 0.0f , 0.0f);
-    vertices[4] = glm::vec3( 0.5f , 0.0f , 0.0f);
+    vertices[4] = glm::vec3( 0.5f , 0.0f , -0.5f);
 
     triangles[0] = Tri(2, 3, 0);
     triangles[1] = Tri(3, 4, 1);

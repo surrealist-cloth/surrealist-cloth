@@ -24,8 +24,6 @@ class MeshIShape : public IShape
 public:
     MeshIShape(std::string meshfile);
     MeshIShape(std::vector<glm::vec3> vertices, std::vector<Tri> triangles);
-    MeshIShape(); // generate a default mesh
-    //MeshIShape(string); //takes in string to a file path
     virtual ~MeshIShape() {};
     std::unique_ptr<glm::vec2> parameterize(glm::vec3& point) const override;
 protected:
@@ -37,7 +35,7 @@ private:
     void loadVertexTriangles();
     void loadVertexNormals();
 
-    inline glm::vec3 getTriangleNormal(const Tri &tri) const;
+    inline glm::vec3 getTriangleNormal(const Tri tri) const;
     glm::vec3 getNormalBarycentric(int triIndex, glm::vec3 point) const;
 
     void loadDummyCloth();

@@ -52,6 +52,7 @@ SOURCES += \
     shapes/ConeShape.cpp \
     shapes/CubeShape.cpp \
     shapes/CylinderShape.cpp \
+    shapes/EmptyShape.cpp \
     shapes/OpenGLShape.cpp \
     shapes/PolygonShape.cpp \
     shapes/RectangleShape.cpp \
@@ -119,6 +120,7 @@ HEADERS += \
     shapes/ConeShape.h \
     shapes/CubeShape.h \
     shapes/CylinderShape.h \
+    shapes/EmptyShape.h \
     shapes/OpenGLShape.h \
     shapes/PolygonShape.h \
     shapes/RectangleShape.h \
