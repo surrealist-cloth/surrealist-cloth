@@ -235,13 +235,13 @@ void MeshIShape::loadDummyCloth() {
     vertices.resize(9);
 
     triangles[0] = Tri(3, 4, 0);
-    triangles[1] = Tri(0, 4, 1);
-    triangles[2] = Tri(4, 2, 1);
-    triangles[3] = Tri(4, 5, 2);
+//    triangles[1] = Tri(0, 4, 1);
+//    triangles[2] = Tri(4, 2, 1);
+//    triangles[3] = Tri(4, 5, 2);
     triangles[4] = Tri(4, 8, 5);
     triangles[5] = Tri(7, 8, 4);
-    triangles[6] = Tri(6, 7, 4);
-    triangles[7] = Tri(6, 4, 3);
+//    triangles[6] = Tri(6, 7, 4);
+//    triangles[7] = Tri(6, 4, 3);
 
     vertices[0] = glm::vec3(-0.5f, 0.5f, 0.0f);
     vertices[1] = glm::vec3( 0.0f, 0.5f, 0.0f);
