@@ -42,8 +42,8 @@ ObjLoader::ObjLoader(std::string filePath)
                 printf("File can't be read by our simple parser : ( Try exporting with other options\n");
                 return;
             }
-            m_triangles.push_back(Tri(vertexIndex[0], vertexIndex[1], vertexIndex[2]));
-            m_normals.push_back(Tri(normalIndex[0], normalIndex[1], normalIndex[2]));
+            m_triangles.push_back(Tri(vertexIndex[0] - 1, vertexIndex[1] - 1, vertexIndex[2] - 1));
+            m_normals.push_back(Tri(normalIndex[0] - 1, normalIndex[1] - 1, normalIndex[2] - 1));
         }
     }
 }
