@@ -129,8 +129,8 @@ struct Settings {
     bool useAntiAliasing;       // Enable or disable anti-aliasing.
     bool useShadows;            // Enable or disable shadows.
     bool useTextureMapping;     // Enable or disable texture mapping.
-    bool useReflection;         // Enable or disable reflection.
-    bool useRefraction;         // Enable or disable refraction (this is extra credit).
+    bool useRecursive;
+    bool useRGBIOR;
     bool useMultiThreading;     // Enable or disable multi-threading (extra credit).
     bool usePointLights;        // Enable or disable point lighting.
     bool useDirectionalLights;  // Enable or disable directional lighting (extra credit).

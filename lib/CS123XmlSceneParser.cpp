@@ -710,8 +710,8 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
     mat.textureMap.isUsed = false;
     mat.bumpMap.isUsed = false;
     mat.cDiffuse.r = mat.cDiffuse.g = mat.cDiffuse.b = 1;
-    mat.r0 = 0.8;
-    mat.eta.r = 0.79; mat.eta.g = 0.8; mat.eta.b = 0.81;
+    mat.ior.r = 1.5; mat.ior.g = 1.49; mat.ior.b = 1.48;
+    mat.roughness = 0.02f;
 
     node->primitives.push_back(primitive);
 
@@ -773,8 +773,8 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
                 PARSE_ERROR(e);
                 return false;
             }
-        } else if (e.tagName() == "eta") {
-            if (!parseColor(e, mat.eta)) {
+        } else if (e.tagName() == "ior") {
+            if (!parseColor(e, mat.ior)) {
                 PARSE_ERROR(e);
                 return false;
             }
@@ -803,12 +803,7 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
                 PARSE_ERROR(e);
                 return false;
             }
-        } else if (e.tagName() == "r0") {
-            if (!parseSingle(e, mat.r0, "v")) {
-                PARSE_ERROR(e);
-                return false;
-            }
-        } else {
+        }else {
             UNSUPPORTED_ELEMENT(e);
             return false;
         }

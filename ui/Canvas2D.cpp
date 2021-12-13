@@ -9,35 +9,35 @@
  */
 
 // For your convenience, a few headers are included for you.
-#include <assert.h>
-#include <iostream>
-#include <math.h>
-#include <memory>
-#include <unistd.h>
 #include "Canvas2D.h"
-#include "Settings.h"
+#include "RGBA.h"
 #include "RayScene.h"
-#include <QtConcurrent>
-#include <QList>
-#include <QCoreApplication>
-#include <QPainter>
+#include "Settings.h"
 #include "brush/Brush.h"
 #include "brush/ConstantBrush.h"
 #include "brush/LinearBrush.h"
 #include "brush/QuadraticBrush.h"
 #include "brush/SmudgeBrush.h"
-#include <glm/glm.hpp>
-#include "RGBA.h"
-#include <utility>
-#include "filter/Filter.h"
-#include "filter/SobelFilter.h"
+#include "cloth/Cloth.h"
 #include "filter/BlurFilter.h"
+#include "filter/Filter.h"
 #include "filter/ScaleFilter.h"
+#include "filter/SobelFilter.h"
+#include <QCoreApplication>
+#include <QList>
+#include <QPainter>
+#include <QtConcurrent>
+#include <assert.h>
+#include <glm/glm.hpp>
+#include <iostream>
+#include <math.h>
+#include <memory>
+#include <unistd.h>
+#include <utility>
 
-Canvas2D::Canvas2D() :
-    // @TODO: Initialize any pointers in this class here.
-    m_rayScene(nullptr),
-    m_brush(nullptr)
+Canvas2D::Canvas2D()
+    : // @TODO: Initialize any pointers in this class here.
+      m_rayScene(nullptr), m_brush(nullptr)
 {
     this->settingsChanged(); // to trigger a brush update
 }
@@ -48,36 +48,39 @@ Canvas2D::~Canvas2D()
 
 // This is called when the canvas size is changed. You can change the canvas size by calling
 // resize(...). You probably won't need to fill this in, but you can if you want to.
-void Canvas2D::notifySizeChanged(int w, int h) {
+void Canvas2D::notifySizeChanged(int w, int h)
+{
 }
 
-void Canvas2D::paintEvent(QPaintEvent *e) {
+void Canvas2D::paintEvent(QPaintEvent *e)
+{
     // You probably won't need to fill this in, but you can if you want to override any painting
     // events for the 2D canvas. For now, we simply call the superclass.
     SupportCanvas2D::paintEvent(e);
-
 }
 
-void Canvas2D::settingsChanged() {
-    if (settings.brushColor != m_lastSettings.brushColor ||
-            settings.brushRadius != m_lastSettings.brushRadius ||
-            settings.brushType != m_lastSettings.brushType) {
+void Canvas2D::settingsChanged()
+{
+    if (settings.brushColor != m_lastSettings.brushColor || settings.brushRadius != m_lastSettings.brushRadius ||
+        settings.brushType != m_lastSettings.brushType)
+    {
         // reinitialize the brush
-        switch (settings.brushType) {
-            case BRUSH_CONSTANT:
-                m_brush.reset(new ConstantBrush(settings.brushColor, settings.brushRadius));
-                break;
-            case BRUSH_LINEAR:
-                m_brush.reset(new LinearBrush(settings.brushColor, settings.brushRadius));
-                break;
-            case BRUSH_QUADRATIC:
-                m_brush.reset(new QuadraticBrush(settings.brushColor, settings.brushRadius));
-                break;
-            case BRUSH_SMUDGE:
-                m_brush.reset(new SmudgeBrush(settings.brushColor, settings.brushRadius));
-                break;
-            default:
-                std::cerr << "Brush type " << settings.brushType << "not implemented" << std::endl;
+        switch (settings.brushType)
+        {
+        case BRUSH_CONSTANT:
+            m_brush.reset(new ConstantBrush(settings.brushColor, settings.brushRadius));
+            break;
+        case BRUSH_LINEAR:
+            m_brush.reset(new LinearBrush(settings.brushColor, settings.brushRadius));
+            break;
+        case BRUSH_QUADRATIC:
+            m_brush.reset(new QuadraticBrush(settings.brushColor, settings.brushRadius));
+            break;
+        case BRUSH_SMUDGE:
+            m_brush.reset(new SmudgeBrush(settings.brushColor, settings.brushRadius));
+            break;
+        default:
+            std::cerr << "Brush type " << settings.brushType << "not implemented" << std::endl;
         }
     }
     m_lastSettings = settings;
@@ -88,45 +91,58 @@ void Canvas2D::settingsChanged() {
 // ** BRUSH
 // ********************************************************************************************
 
-
-void Canvas2D::mouseDown(int x, int y) {
+void Canvas2D::mouseDown(int x, int y)
+{
     m_brush->brushDown(x, y, this, settings.fixAlphaBlending);
     std::cout << "Canvas2d::mouseDown() called" << std::endl;
+    Cloth cloth(55, 45);
+    cloth.massAt(0, 0).setFixed(true);
+    cloth.massAt(0, 44).setFixed(true);
+    // cloth.massAt(0, 0).translate(glm::vec3(-2, 0, 0));
+    // cloth.massAt(0, 44).translate(glm::vec3(2, 0, 0));
+    for (int i = 0; i < 192; i++)
+    {
+        cloth.addForce(glm::vec3(0, -0.2, 0) * 0.25f);
+        cloth.addWindForce(glm::vec3(0.5, 0, 0.2) * 0.25f);
+        cloth.step();
+        cloth.toObj("/Users/dylan/Desktop/clothtest/frame" + std::to_string(i) + ".obj");
+    }
 }
 
-void Canvas2D::mouseDragged(int x, int y) {
+void Canvas2D::mouseDragged(int x, int y)
+{
     m_brush->brushDragged(x, y, this, settings.fixAlphaBlending);
     std::cout << "Canvas2d::mouseDragged() called" << std::endl;
-
 }
 
-void Canvas2D::mouseUp(int x, int y) {
+void Canvas2D::mouseUp(int x, int y)
+{
     m_brush->brushUp(x, y, this);
     std::cout << "Canvas2d::mouseUp() called" << std::endl;
 }
-
-
 
 // ********************************************************************************************
 // ** FILTER
 // ********************************************************************************************
 
-void Canvas2D::filterImage() {
+void Canvas2D::filterImage()
+{
     // TODO: [FILTER] Filter the image. Some example code to get the filter type is provided below.
     std::unique_ptr<Filter> filter;
-    switch(settings.filterType) {
-        case FILTER_EDGE_DETECT:
-            filter = std::make_unique<SobelFilter>();
-            break;
-        case FILTER_BLUR:
-            filter = std::make_unique<BlurFilter>(settings.blurRadius);
-            break;
-        case FILTER_SCALE:
-            filter = std::make_unique<ScaleFilter>(settings.scaleX, settings.scaleY);
-            break;
-        default:
-            std::cerr << "Unhandled filter type " << settings.filterType << std::endl;
-            return;
+    switch (settings.filterType)
+    {
+    case FILTER_EDGE_DETECT:
+        filter = std::make_unique<SobelFilter>();
+        break;
+    case FILTER_BLUR:
+        filter = std::make_unique<BlurFilter>(settings.blurRadius);
+        break;
+    case FILTER_SCALE:
+        filter = std::make_unique<ScaleFilter>(settings.scaleX, settings.scaleY);
+        break;
+    default:
+        std::cerr << "Unhandled filter type " << settings.filterType << std::endl;
+        return;
     }
     filter->apply(this);
     // Leave this code here! This code ensures that the Canvas2D will be completely wiped before
@@ -139,66 +155,88 @@ void Canvas2D::filterImage() {
 // ** RAY
 // ********************************************************************************************
 
-void Canvas2D::setScene(RayScene *scene) {
+void Canvas2D::setScene(RayScene *scene)
+{
     m_rayScene.reset(scene);
 }
 
-void Canvas2D::renderPixel(CS123SceneCameraData *camera, const glm::mat4& invCameraTransformation, int row, int col, RGBA* pix)
+void Canvas2D::renderPixel(CS123SceneCameraData *camera, const glm::mat4 &invCameraTransformation, int row, int col,
+                           int width, int height, std::vector<RGBA> &pix)
 {
-    if (!m_isRendering) return;
-    Ray ray(glm::vec3(0),
-            m_rayScene->getViewplaneCoords(camera, this->width(), this->height(), VIEWPLANE_DEPTH, row, col));
+    if (!m_isRendering)
+        return;
+    Ray ray(glm::vec3(0), m_rayScene->getViewplaneCoords(camera, width, height, VIEWPLANE_DEPTH, row, col));
     ray.transform(invCameraTransformation);
 
     glm::vec3 color = m_rayScene->rayTrace(ray);
-    pix[row * this->width() + col] = RGBA(glm::min(255, static_cast<int>(color.x * 255)),
-                                          glm::min(255, static_cast<int>(color.y * 255)),
-                                          glm::min(255, static_cast<int>(color.z * 255)),
-                                          255);
+    pix[row * width + col] =
+        RGBA(glm::min(255, static_cast<int>(color.x * 255)), glm::min(255, static_cast<int>(color.y * 255)),
+             glm::min(255, static_cast<int>(color.z * 255)), 255);
 }
 
-void Canvas2D::renderImage(CS123SceneCameraData *camera, int width, int height) {
-    if (m_rayScene) {
+void Canvas2D::renderImage(CS123SceneCameraData *camera, int width, int height)
+{
+    if (m_rayScene)
+    {
+        int numSuperSamples = settings.useSuperSampling ? glm::max(settings.numSuperSamples, 1) : 1;
         m_isRendering = true;
         resize(width, height);
-        RGBA* pix = data();
+        std::vector<RGBA> superPix;
+        int superWidth = width * numSuperSamples;
+
+        int superHeight = height * numSuperSamples;
+        superPix.resize(superWidth * superHeight);
+
         glm::mat4 invCameraTransformation = glm::inverse(m_rayScene->getCameraTransformation(camera));
 
         // concurrency if enabled
-        if (settings.useMultiThreading) {
+        if (settings.useMultiThreading)
+        {
             QList<int> cols;
 
-            for (int col = 0; col < this->width(); col++) {
+            for (int col = 0; col < superWidth; col++)
+            {
                 cols.push_back(col);
             }
 
-            for (int row = 0; row < this->height(); row++) {
-                std::cout << "Row done" << std::endl;
+            for (int row = 0; row < superHeight; row++)
+            {
                 QtConcurrent::blockingMap(cols, [&](int col) {
-                    renderPixel(camera, invCameraTransformation, row, col, pix);
+                    renderPixel(camera, invCameraTransformation, row, col, superWidth, superHeight, superPix);
                 });
                 QCoreApplication::processEvents();
             }
-
-        } else {
-            for (int row = 0; row < this->height(); row++) {
-                for (int col = 0; col < this->width(); col++) {
-                    renderPixel(camera, invCameraTransformation, row, col, pix);
+        }
+        else
+        {
+            for (int row = 0; row < superHeight; row++)
+            {
+                for (int col = 0; col < superWidth; col++)
+                {
+                    renderPixel(camera, invCameraTransformation, row, col, superWidth, superHeight, superPix);
                 }
                 // If you want the interface to stay responsive, make sure to call
                 // QCoreApplication::processEvents() periodically during the rendering.
                 QCoreApplication::processEvents();
             }
         }
+
+        // scale down
+        if (numSuperSamples == 1)
+        {
+            memcpy(data(), superPix.data(), width * height * sizeof(RGBA));
+        }
+        else
+        {
+            ScaleFilter filter(1.f / numSuperSamples, 1.f / numSuperSamples);
+            filter.applyRGBA(superPix.data(), data(), superWidth, superHeight);
+        }
     }
     m_isRendering = false;
 }
 
-void Canvas2D::cancelRender() {
+void Canvas2D::cancelRender()
+{
     // TODO: cancel the raytracer (optional)
     m_isRendering = false;
 }
-
-
-
-

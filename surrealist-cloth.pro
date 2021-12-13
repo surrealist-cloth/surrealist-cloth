@@ -6,7 +6,9 @@ TARGET = surrealist-cloth
 TEMPLATE = app
 
 QMAKE_LFLAGS += -no-pie
+QMAKE_LFLAGS += -openmp
 QMAKE_CXXFLAGS += -std=c++14
+QMAKE_CXXFLAGS += -openmp
 CONFIG += c++14
 
 unix:!macx {
@@ -31,6 +33,9 @@ SOURCES += \
     camera/OrbitingCamera.cpp \
     camera/CamtransCamera.cpp \
     camera/QuaternionCamera.cpp \
+    cloth/Cloth.cpp \
+    cloth/ClothConstraint.cpp \
+    cloth/ClothMass.cpp \
     filter/BlurFilter.cpp \
     filter/Filter.cpp \
     filter/ScaleFilter.cpp \
@@ -98,6 +103,9 @@ HEADERS += \
     camera/OrbitingCamera.h \
     camera/CamtransCamera.h \
     camera/QuaternionCamera.h \
+    cloth/Cloth.h \
+    cloth/ClothConstraint.h \
+    cloth/ClothMass.h \
     filter/BlurFilter.h \
     filter/Filter.h \
     filter/ScaleFilter.h \

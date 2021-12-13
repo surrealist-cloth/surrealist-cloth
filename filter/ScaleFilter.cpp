@@ -16,6 +16,15 @@ void ScaleFilter::apply(Canvas2D *canvas)
     int height = canvas->height();
 
     // initialize color with data
+    std::vector<Color> color = applyRaw(data, width, height);
+    int newWidth = static_cast<int>(width * m_scaleX);
+    int newHeight = static_cast<int>(height * m_scaleY);
+    canvas->resize(newWidth, newHeight);
+    Color2RGBA(color, data, newWidth * newHeight);
+}
+
+std::vector<Color> ScaleFilter::applyRaw(RGBA* data, int width, int height)
+{
     std::vector<Color> color(width * height);
     RGBA2Color(data, color, width * height);
 
@@ -29,9 +38,15 @@ void ScaleFilter::apply(Canvas2D *canvas)
     int newHeight = static_cast<int>(height * m_scaleY);
     color.resize(newWidth * newHeight);
     convolveVertical(horizontal, color, newWidth, height);
-    canvas->resize(newWidth, newHeight);
-    data = canvas->data();
-    Color2RGBA(color, data, newWidth * newHeight);
+    return color;
+}
+
+void ScaleFilter::applyRGBA(RGBA *data, RGBA* output, int width, int height)
+{
+    std::vector<Color> color = applyRaw(data, width, height);
+    int newWidth = static_cast<int>(width * m_scaleX);
+    int newHeight = static_cast<int>(height * m_scaleY);
+    Color2RGBA(color, output, newWidth * newHeight);
 }
 
 void ScaleFilter::convolveHorizontal(std::vector<Color> &data, std::vector<Color> &output, int width, int height)

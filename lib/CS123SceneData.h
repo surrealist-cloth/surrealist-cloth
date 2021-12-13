@@ -142,8 +142,7 @@ struct CS123SceneMaterial {
    CS123SceneColor cSpecular;
    CS123SceneColor cTransparent;
    CS123SceneColor cEmissive;
-   CS123SceneColor eta; // for glass
-   float r0; // for glass and metal
+   CS123SceneColor ior; // for glass
    float roughness; // for metal
 
    CS123SceneFileMap textureMap;
@@ -161,8 +160,7 @@ struct CS123SceneMaterial {
        cReflective.r = 0.0f; cReflective.g = 0.0f; cReflective.b = 0.0f; cReflective.a = 0.0f;
        cTransparent.r = 0.0f; cTransparent.g = 0.0f; cTransparent.b = 0.0f; cTransparent.a = 0.0f;
        cEmissive.r = 0.0f; cEmissive.g = 0.0f; cEmissive.b = 0.0f; cEmissive.a = 0.0f;
-       eta.r = 0.0f; eta.g = 0.0f; eta.b = 0.0f; eta.a = 0.0f;
-       r0 = 0.f;
+       ior.r = 0.0f; ior.g = 0.0f; ior.b = 0.0f; ior.a = 0.0f;
        roughness = 0.f;
        textureMap.clear();
        bumpMap.clear();
