@@ -13,6 +13,7 @@ public:
     std::vector<Tri> m_triangles;
     std::vector<Tri> m_normals;
     std::vector<glm::vec3> m_vertexNormals;
+    bool hasNormals;
 };
 
 #endif // OBJLOADER_H

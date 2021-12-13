@@ -22,15 +22,20 @@
 
 MeshIShape::MeshIShape(std::string meshfile) {
     ObjLoader loader(meshfile);
-    m_normals = loader.m_normals;
     m_triangles = loader.m_triangles;
-    m_vertexNormals = loader.m_vertexNormals;
     m_vertices = loader.m_vertices;
-
     loadVertexTriangles();
-    m_triangleNormals.reserve(m_triangles.size());
-    for (const Tri tri: m_triangles) {
-        m_triangleNormals.push_back(glm::normalize(getTriangleNormal(tri)));
+
+    if (loader.hasNormals) {
+        m_normals = loader.m_normals;
+        m_vertexNormals = loader.m_vertexNormals;
+
+    } else {
+        loadVertexNormals();
+        m_triangleNormals.reserve(m_triangles.size());
+        for (const Tri tri: m_triangles) {
+            m_triangleNormals.push_back(glm::normalize(getTriangleNormal(tri)));
+        }
     }
 }
 
@@ -132,7 +137,7 @@ std::unique_ptr<glm::vec2> MeshIShape::parameterize(glm::vec3 &point) const {
 void MeshIShape::loadVertexTriangles() {
     m_vertexTriangles.clear();
     m_vertexTriangles.resize(m_vertices.size());
-    for (int triIndex = 0; triIndex < m_triangles.size(); triIndex++) {
+    for (int triIndex = 0; triIndex < m_triangles.size(); triIndex++) { // Crashes
         const Tri tri = m_triangles[triIndex];
         m_vertexTriangles[tri.v_1].push_back(triIndex);
         m_vertexTriangles[tri.v_2].push_back(triIndex);

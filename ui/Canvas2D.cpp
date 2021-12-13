@@ -173,6 +173,7 @@ void Canvas2D::renderImage(CS123SceneCameraData *camera, int width, int height) 
             }
 
             for (int row = 0; row < this->height(); row++) {
+                std::cout << "Row done" << std::endl;
                 QtConcurrent::blockingMap(cols, [&](int col) {
                     renderPixel(camera, invCameraTransformation, row, col, pix);
                 });

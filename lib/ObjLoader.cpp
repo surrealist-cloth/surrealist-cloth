@@ -4,46 +4,87 @@
 #include <iostream>
 #include <glm/glm.hpp>
 #include <vector>
+#include <fstream>
+#include <regex>
 #include "ishapes/MeshIShape.h"
+
+std::vector<std::string> split(std::string s, std::string delimiter) {
+    size_t pos_start = 0, pos_end, delim_len = delimiter.length();
+    std::string token;
+    std::vector<std::string> res;
+
+    while ((pos_end = s.find (delimiter, pos_start)) != std::string::npos) {
+        token = s.substr (pos_start, pos_end - pos_start);
+        pos_start = pos_end + delim_len;
+        res.push_back (token);
+    }
+
+    res.push_back (s.substr (pos_start));
+    return res;
+}
 
 ObjLoader::ObjLoader(std::string filePath)
 {
-    FILE * file = fopen(filePath.c_str(), "r");
-    if( file == NULL ){
-        std::cerr << "Impossible to open the file !" << std::endl;
+    std::ifstream file(filePath);
+    if (file.fail()) {
+        std::cerr << "Cannot open file" << std::endl;
         return;
     }
 
-    while(true) {
-
-        char lineHeader[128];
-        // read the first word of the line
-        int res = fscanf(file, "%s", lineHeader);
-        if (res == EOF)
-            break; // EOF = End Of File. Quit the loop.
-
-        // else : parse lineHeader
-        if ( strcmp( lineHeader, "v" ) == 0 ){
-            glm::vec3 vertex;
-            fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z );
+    for (std::string line; std::getline(file, line); ) {
+        int splitIndex = line.find(" ");
+        std::string lineHeader = line.substr(0, splitIndex);
+        if (splitIndex == std::string::npos) continue;
+        std::vector<std::string> parts = split(line.substr(splitIndex+1), " ");
+        if (parts.size() != 3) {
+            std::cerr << "Unparseable file format" << std::endl;
+            return;
+        }
+        if (lineHeader == "v") {
+            glm::vec3 vertex(std::stof(parts[0]), std::stof(parts[1]), std::stof(parts[2]));
             m_vertices.push_back(vertex);
-        } else if ( strcmp( lineHeader, "vt" ) == 0 ){
-            glm::vec2 uv;
-            fscanf(file, "%f %f\n", &uv.x, &uv.y );
-        } else if ( strcmp( lineHeader, "vn" ) == 0 ){
-            glm::vec3 normal;
-            fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z );
+        } else if (lineHeader == "vn") {
+            glm::vec3 normal(std::stof(parts[0]), std::stof(parts[1]), std::stof(parts[2]));
             m_vertexNormals.push_back(normal);
-        } else if ( strcmp( lineHeader, "f" ) == 0 ){
-            std::string vertex1, vertex2, vertex3;
-            unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-            int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0], &uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1], &vertexIndex[2], &uvIndex[2], &normalIndex[2] );
-            if (matches != 9){
-                printf("File can't be read by our simple parser : ( Try exporting with other options\n");
-                return;
+        } else if (lineHeader == "f") {
+            std::vector<std::string> parts1 = split(parts[0], "/");
+            std::vector<std::string> parts2 = split(parts[1], "/");
+            std::vector<std::string> parts3 = split(parts[2], "/");
+
+            if (parts1.size() == 1) {
+                if (parts2.size() != 1 || parts3.size() != 1) {
+                    std::cerr << "Unparseable file format" << std::endl;
+                    return;
+                }
+                m_triangles.push_back(Tri(std::stoi(parts1[0]) - 1, std::stoi(parts2[0]) - 1, std::stoi(parts3[0]) - 1));
+                hasNormals = false;
+                continue;
             }
-            m_triangles.push_back(Tri(vertexIndex[0] - 1, vertexIndex[1] - 1, vertexIndex[2] - 1));
-            m_normals.push_back(Tri(normalIndex[0] - 1, normalIndex[1] - 1, normalIndex[2] - 1));
+
+            if (parts1.size() == 2) {
+                if (parts2.size() != 2 || parts3.size() != 2) {
+                    std::cerr << "Unparseable file format" << std::endl;
+                    return;
+                }
+                m_triangles.push_back(Tri(std::stoi(parts1[0]) - 1, std::stoi(parts2[0]) - 1, std::stoi(parts3[0]) - 1));
+                m_normals.push_back(Tri(std::stoi(parts1[1]) - 1, std::stoi(parts2[1]) - 1, std::stoi(parts3[1]) - 1));
+                hasNormals = true;
+                continue;
+            }
+
+            if (parts1.size() == 3) {
+                if (parts2.size() != 3 || parts3.size() != 3) {
+                    std::cerr << "Unparseable file format" << std::endl;
+                    return;
+                }
+                m_triangles.push_back(Tri(std::stoi(parts1[0]) - 1, std::stoi(parts2[0]) - 1, std::stoi(parts3[0]) - 1));
+                m_normals.push_back(Tri(std::stoi(parts1[2]) - 1, std::stoi(parts2[2]) - 1, std::stoi(parts3[2]) - 1));
+                hasNormals = true;
+                continue;
+            }
+
+            std::cerr << "Unparseable file format" << std::endl;
+            return;
         }
     }
 }
