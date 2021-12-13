@@ -15,8 +15,8 @@
 #include "ishapes/IShape.h"
 
 
-#define MAX_RECURSION 4
-#define MIN_INTENSITY 0.005
+#define MAX_RECURSION 5
+#define MIN_INTENSITY 0.0001
 
 /**
  * @class RayScene
@@ -40,7 +40,7 @@ private:
     glm::vec4 getTexture(ShapeIntersection& s);
     bool isOccluded(Ray& lightRay, ShapeIntersection& s, float maxT);
     glm::vec3 illuminate(ShapeIntersection& s, glm::vec3 pos);
-    std::vector<std::reference_wrapper<IShape>> m_ishapes;
+    std::vector<std::unique_ptr<IShape>> m_ishapes;
     float EPSILON = 0.001;
 
     inline glm::vec3 sampleGGX(float roughness, glm::vec3 normal, glm::vec3 raydir);

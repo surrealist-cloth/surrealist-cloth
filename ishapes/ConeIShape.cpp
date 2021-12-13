@@ -13,33 +13,30 @@ ConeIShape::ConeIShape()
     m_bottom = std::make_unique<CircleIShape>(-0.5, -1);
 }
 
-std::vector<float> ConeIShape::intersect(Ray &ray) const
+std::vector<IntersectionCandidate> ConeIShape::intersect(const Ray& ray) const
 {
     // intersect bottom circle
-    std::vector<float> ts = m_bottom->allIntersect(ray);
+    std::vector<IntersectionCandidate> ts = m_bottom->allIntersect(ray);
     float a = pow(ray.dir.x, 2.f) + pow(ray.dir.z, 2.f) - pow(ray.dir.y, 2.f) / 4.f;
     float b = 2 * ray.eye.x * ray.dir.x + 2 * ray.eye.z * ray.dir.z - ray.eye.y * ray.dir.y / 2.f + ray.dir.y / 4;
     float c = pow(ray.eye.x, 2.f) + pow(ray.eye.z, 2.f) - pow(ray.eye.y, 2.f) / 4.f + ray.eye.y / 4.f - 1 / 16.f;
     std::vector<float> otherTs = solveQuadratic(a, b, c);
-    std::copy_if(otherTs.begin(), otherTs.end(), std::back_inserter(ts), [ray](float t) {
+    std::vector<float> bufferTs;
+    std::copy_if(otherTs.begin(), otherTs.end(), std::back_inserter(bufferTs), [ray](float t) {
         float y = ray.getPoint(t).y;
         return (y <= 0.5) && (y >= -0.5);
     });
+
+    for (float t: bufferTs) {
+        ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
+                         return glm::vec3(2 * point.x, - point.y / 2.f + 1 / 4.f, 2 * point.z);
+                         })
+                    );
+    }
     return ts;
 }
 
-std::unique_ptr<glm::vec3> ConeIShape::getNormal(glm::vec3& point) const
-{
-    // do bottom circle
-    if (glm::epsilonEqual(point.y, -0.5f, EPSILON)) {
-        return m_bottom->getNormal(point);
-    }
-    // handle top tip
-    if (glm::epsilonEqual(point.y, 0.5f, EPSILON)) {
-        return std::make_unique<glm::vec3>(0.f, 1.f, 0.f);
-    }
-    return std::make_unique<glm::vec3>(2 * point.x, - point.y / 2.f + 1 / 4.f, 2 * point.z);
-}
+
 
 std::unique_ptr<glm::vec2> ConeIShape::parameterize(glm::vec3 &point) const
 {

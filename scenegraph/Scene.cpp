@@ -11,6 +11,7 @@
 #include "shapes/CubeShape.h"
 #include "shapes/CylinderShape.h"
 #include "shapes/SphereShape.h"
+#include "shapes/EmptyShape.h"
 #include "Settings.h"
 #include <algorithm>
 
@@ -183,6 +184,7 @@ void Scene::setupShapes()
                 shape->loadShape(std::make_unique<SphereShape>(std::max(3, settings.shapeParameter2), std::max(2, settings.shapeParameter1)));
                 break;
             default:
+                shape->loadShape(std::make_unique<EmptyShape>());
                 std::cerr << "Unimplemented shape type" << std::endl;
                 break;
         }

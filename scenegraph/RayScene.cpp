@@ -10,6 +10,7 @@
 #include <ishapes/CubeIShape.h>
 #include <ishapes/CylinderIShape.h>
 #include <ishapes/SphereIShape.h>
+#include <ishapes/MeshIShape.h>
 #include <ishapes/EmptyIShape.h>
 #include <memory>
 #include "RGBA.h"
@@ -30,22 +31,24 @@ RayScene::RayScene(Scene &scene) :
     for (auto& primitive : getPrimitives()) {
         switch (primitive.type) {
             case PrimitiveType::PRIMITIVE_CONE:
-                m_ishapes.push_back(ConeIShape::shared_instance());
+                m_ishapes.push_back(std::make_unique<ConeIShape>());
                 break;
             case PrimitiveType::PRIMITIVE_CUBE:
-                m_ishapes.push_back(CubeIShape::shared_instance());
+                m_ishapes.push_back(std::make_unique<CubeIShape>());
                 break;
             case PrimitiveType::PRIMITIVE_CYLINDER:
-                m_ishapes.push_back(CylinderIShape::shared_instance());
+                m_ishapes.push_back(std::make_unique<CylinderIShape>());
                 break;
             case PrimitiveType::PRIMITIVE_SPHERE:
-                m_ishapes.push_back(SphereIShape::shared_instance());
+                m_ishapes.push_back(std::make_unique<SphereIShape>());
+                break;
+            case PrimitiveType::PRIMITIVE_MESH:
+                m_ishapes.push_back(std::make_unique<MeshIShape>(primitive.meshfile));
                 break;
             default:
-                m_ishapes.push_back(EmptyIShape::shared_instance());
+                m_ishapes.push_back(std::make_unique<EmptyIShape>());
         }
     }
-
 }
 
 RayScene::~RayScene()
@@ -295,9 +298,9 @@ bool RayScene::isOccluded(Ray &lightRay, ShapeIntersection &s, float maxT)
         // put light ray in object space
         Ray ray = lightRay;
         ray.transform(s.invTransformation);
-        std::unique_ptr<float> intersection = s.ishape.closestIntersect(ray);
+        std::unique_ptr<IntersectionCandidate> intersection = s.ishape.closestIntersect(ray);
         if (!intersection) return false;
-        return *intersection < maxT;
+        return intersection->t < maxT;
     }
 }
 
@@ -311,31 +314,29 @@ std::unique_ptr<ShapeIntersection> RayScene::intersect(Ray& ray)
     float matchT = 0.f;
     bool isMatch = false;
     int matchI = 0;
-    glm::vec3 matchPoint;
+    glm::vec3 matchNormal;
     for (int i = 0; i < m_ishapes.size(); i++) {
         Ray objectRay(ray); // get a copy of the ray
         objectRay.transform(invTransformations[i]);
-        std::unique_ptr<float> intersection = m_ishapes[i].get().closestIntersect(objectRay);
-        if (intersection && (!isMatch || *intersection < matchT)) {
-            matchT = *intersection;
+        std::unique_ptr<IntersectionCandidate> intersection = m_ishapes[i]->closestIntersect(objectRay);
+        if (intersection && (!isMatch || intersection->t < matchT)) {
+            matchT = intersection->t;
             matchI = i;
-            matchPoint = objectRay.getPoint(matchT); // point in object space
             isMatch = true;
+            matchNormal = intersection->getNormal(objectRay.getPoint(matchT));
         }
     }
 
     if (!isMatch) {
         return std::unique_ptr<ShapeIntersection>{};
     }
-    std::unique_ptr<glm::vec3> normalPointer = m_ishapes[matchI].get().getNormal(matchPoint);
     glm::vec3 intersection = ray.getPoint(matchT);
-    glm::vec3 normal = normalPointer ? *normalPointer : glm::vec3(0, 1, 0);
-    normal = glm::normalize(glm::transpose(glm::mat3(invTransformations[matchI])) * normal);
+    matchNormal = glm::normalize(glm::transpose(glm::mat3(invTransformations[matchI])) * matchNormal);
     // if the normal and the ray form an acute angle, then we should flip the normal, since
     // the ray is coming from the inside of the object
-    bool isInside = glm::dot(ray.dir, normal) > 0;
-    if (isInside) normal = -normal;
+    bool isInside = glm::dot(ray.dir, matchNormal) > 0;
+    if (isInside) matchNormal = -matchNormal;
 
-    return std::make_unique<ShapeIntersection>(matchT, intersection, normal, primitives[matchI], m_ishapes[matchI], invTransformations[matchI], isInside);
+    return std::make_unique<ShapeIntersection>(matchT, intersection, matchNormal, primitives[matchI], *m_ishapes[matchI], invTransformations[matchI], isInside);
 }
 

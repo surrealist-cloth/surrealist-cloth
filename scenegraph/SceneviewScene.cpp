@@ -96,22 +96,26 @@ void SceneviewScene::setLights()
 }
 
 void SceneviewScene::renderGeometry(std::unique_ptr<CS123::GL::Shader>& shader) {
-    assert(m_shapes.size() == m_primitives.size());
-    assert(m_shapes.size() == m_transformations.size());
+//    assert(m_shapes.size() == m_primitives.size());
+//    assert(m_shapes.size() == m_transformations.size());
     for (int i = 0; i < m_primitives.size(); i++) {
         shader->setUniform("m", m_transformations[i]);
 
-        m_shapes[i]->draw();
+        if(!(m_primitives[i].type == PrimitiveType::PRIMITIVE_MESH)) {
+            m_shapes[i]->draw();
+        }
     }
 }
 
 void SceneviewScene::renderGeometry(std::unique_ptr<CS123::GL::CS123Shader>& shader) {
-    assert(m_shapes.size() == m_primitives.size());
-    assert(m_shapes.size() == m_transformations.size());
+//    assert(m_shapes.size() == m_primitives.size());
+//    assert(m_shapes.size() == m_transformations.size());
     for (int i = 0; i < m_primitives.size(); i++) {
         shader->setUniform("m", m_transformations[i]);
         shader->applyMaterial(m_primitives[i].material);
-        m_shapes[i]->draw();
+        if(!(m_primitives[i].type == PrimitiveType::PRIMITIVE_MESH)) {
+            m_shapes[i]->draw();
+        }
     }
 }
 

@@ -28,23 +28,30 @@ struct Ray {
     }
 };
 
+struct IntersectionCandidate {
+   IntersectionCandidate(float t,
+                         std::function<glm::vec3(glm::vec3)> getNormal):
+       t(t), getNormal(getNormal) {
+
+   }
+  float t;
+  std::function<glm::vec3(glm::vec3)> getNormal;
+};
+
 
 class IShape
 {
 public:
     IShape() {};
     virtual ~IShape() {};
-    std::unique_ptr<float> closestIntersect(Ray& ray) const;
-    virtual std::unique_ptr<glm::vec3> getNormal(glm::vec3& point) const {
-        return std::unique_ptr<glm::vec3>{};
-    }
+    std::unique_ptr<IntersectionCandidate> closestIntersect(const Ray& ray) const;
     virtual std::unique_ptr<glm::vec2> parameterize(glm::vec3& point) const {
         return std::unique_ptr<glm::vec2>{};
     }
-    std::vector<float> allIntersect(Ray& ray) const;
+    std::vector<IntersectionCandidate> allIntersect(const Ray& ray) const;
 protected:
-    virtual std::vector<float> intersect(Ray& ray) const {
-        return std::vector<float>();
+    virtual std::vector<IntersectionCandidate> intersect(const Ray& ray) const {
+        return std::vector<IntersectionCandidate>();
     }
     std::vector<float> solveQuadratic(float a, float b, float c) const;
     const float EPSILON = 0.0001;

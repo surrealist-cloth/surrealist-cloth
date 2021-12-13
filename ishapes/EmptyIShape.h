@@ -13,9 +13,8 @@ public:
     static EmptyIShape &shared_instance() {static EmptyIShape shape; return shape;}
     EmptyIShape();
     virtual ~EmptyIShape() {};
-    std::unique_ptr<glm::vec3> getNormal(glm::vec3& point) const override;
 protected:
-    std::vector<float> intersect(Ray& ray) const override;
+    std::vector<IntersectionCandidate> intersect(const Ray& ray) const override;
 };
 
 EmptyIShape emptyIShape();

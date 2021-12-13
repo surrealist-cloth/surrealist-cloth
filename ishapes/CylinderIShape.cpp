@@ -15,39 +15,33 @@ CylinderIShape::CylinderIShape()
     m_bottom = std::make_unique<CircleIShape>(-0.5, -1);
 }
 
-std::vector<float> CylinderIShape::intersect(Ray &ray) const
+std::vector<IntersectionCandidate> CylinderIShape::intersect(const Ray& ray) const
 {
     // intersect top circle
-    std::vector<float> ts = m_top->allIntersect(ray);
+    std::vector<IntersectionCandidate> ts = m_top->allIntersect(ray);
     // intersect bottom circle
-    std::vector<float> bottomTs = m_bottom->allIntersect(ray);
+    std::vector<IntersectionCandidate> bottomTs = m_bottom->allIntersect(ray);
     ts.insert(ts.end(), bottomTs.begin(), bottomTs.end());
 
     float a = pow(ray.dir.x, 2.f) + pow(ray.dir.z, 2.f);
     float b = 2 * ray.eye.x * ray.dir.x + 2 * ray.eye.z * ray.dir.z;
     float c = pow(ray.eye.x, 2.f) + pow(ray.eye.z, 2.f) - 1 / 4.f;
     std::vector<float> bodyTs = solveQuadratic(a, b, c);
-    std::copy_if(bodyTs.begin(), bodyTs.end(), std::back_inserter(ts), [ray](float t) {
+
+
+    for (float t: bodyTs) {
         float y = ray.getPoint(t).y;
-        return (y <= 0.5) && (y >= -0.5);
-    });
+        if ((y <= 0.5) && (y >= -0.5)) {
+                    ts.push_back(IntersectionCandidate(t, [](glm::vec3 point) {
+                                 return glm::vec3(2 * point.x, 0, 2 * point.z);
+                                 }
+                                 ));
+        }
+
+    }
     return ts;
 }
 
-std::unique_ptr<glm::vec3> CylinderIShape::getNormal(glm::vec3& point) const
-{
-    // do top circle
-    if (glm::epsilonEqual(point.y, 0.5f, EPSILON)) {
-        return m_top->getNormal(point);
-    }
-    // do bottom circle
-    if (glm::epsilonEqual(point.y, -0.5f, EPSILON)) {
-        return m_bottom->getNormal(point);
-    }
-    // do body
-
-    return std::make_unique<glm::vec3>(2 * point.x, 0, 2 * point.z);
-}
 
 std::unique_ptr<glm::vec2> CylinderIShape::parameterize(glm::vec3 &point) const
 {

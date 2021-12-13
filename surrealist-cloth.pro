@@ -48,7 +48,7 @@ SOURCES += \
     ishapes/IShape.cpp \
     ishapes/MeshIShape.cpp \
     ishapes/SphereIShape.cpp \
-    ishapes/TriangleIShape.cpp \
+    lib/ObjLoader.cpp \
     scenegraph/Scene.cpp \
     scenegraph/OpenGLScene.cpp \
     scenegraph/ShapesScene.cpp \
@@ -57,6 +57,7 @@ SOURCES += \
     shapes/ConeShape.cpp \
     shapes/CubeShape.cpp \
     shapes/CylinderShape.cpp \
+    shapes/EmptyShape.cpp \
     shapes/OpenGLShape.cpp \
     shapes/PolygonShape.cpp \
     shapes/RectangleShape.cpp \
@@ -118,7 +119,7 @@ HEADERS += \
     ishapes/IShape.h \
     ishapes/MeshIShape.h \
     ishapes/SphereIShape.h \
-    ishapes/TriangleIShape.h \
+    lib/ObjLoader.h \
     scenegraph/Scene.h \
     scenegraph/OpenGLScene.h \
     scenegraph/ShapesScene.h \
@@ -127,6 +128,7 @@ HEADERS += \
     shapes/ConeShape.h \
     shapes/CubeShape.h \
     shapes/CylinderShape.h \
+    shapes/EmptyShape.h \
     shapes/OpenGLShape.h \
     shapes/PolygonShape.h \
     shapes/RectangleShape.h \

@@ -8,19 +8,25 @@
 #include "scenegraph/RayScene.h"
 #include <algorithm>
 
-std::unique_ptr<float> IShape::closestIntersect(Ray& ray) const {
-    std::vector<float> intersections = allIntersect(ray);
-    if (intersections.size() == 0) return std::unique_ptr<float>{};
-    return std::make_unique<float>(*std::min_element(intersections.begin(), intersections.end()));
+std::unique_ptr<IntersectionCandidate> IShape::closestIntersect(const Ray& ray) const {
+    std::vector<IntersectionCandidate> intersections = allIntersect(ray);
+    if (intersections.size() == 0) return std::unique_ptr<IntersectionCandidate>{};
+    IntersectionCandidate intersection = *std::min_element(intersections.begin(), intersections.end(),
+                                                                                                [](const IntersectionCandidate &a, const IntersectionCandidate &b) {
+                                                                                                                               return a.t < b.t;
+                                                                                                                                                                  }
+                                                                                                );
+    return std::make_unique<IntersectionCandidate>(intersection);
 }
 
-std::vector<float> IShape::allIntersect(Ray &ray) const
+std::vector<IntersectionCandidate> IShape::allIntersect(const Ray &ray) const
 {
-    std::vector<float> ts;
-    std::vector<float> allTs = intersect(ray);
-    std::copy_if(allTs.begin(), allTs.end(), std::back_inserter(ts), [](float t) {
-        return t >= 0.f;
+    std::vector<IntersectionCandidate> ts;
+    std::vector<IntersectionCandidate> allTs = intersect(ray);
+    std::copy_if(allTs.begin(), allTs.end(), std::back_inserter(ts), [](IntersectionCandidate t) {
+        return t.t >= 0.f;
     });
+
     return ts;
 }
 
