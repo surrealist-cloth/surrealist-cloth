@@ -43,8 +43,9 @@ private:
 
     std::vector<glm::vec3> m_vertices;
     std::vector<Tri> m_triangles; //point to verts
+    std::vector<Tri> m_normals;
 
-    std::vector<glm::vec3> m_vertexNormals; // might not even need this
+    std::vector<glm::vec3> m_vertexNormals;
     std::vector<std::vector<int>> m_vertexTriangles; // given a vertex, what triangles include it?
     std::vector<glm::vec3> m_triangleNormals; //point to verts compute this in constructor
 };

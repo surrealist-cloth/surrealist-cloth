@@ -43,6 +43,7 @@ SOURCES += \
     ishapes/IShape.cpp \
     ishapes/MeshIShape.cpp \
     ishapes/SphereIShape.cpp \
+    lib/ObjLoader.cpp \
     scenegraph/Scene.cpp \
     scenegraph/OpenGLScene.cpp \
     scenegraph/ShapesScene.cpp \
@@ -110,6 +111,7 @@ HEADERS += \
     ishapes/IShape.h \
     ishapes/MeshIShape.h \
     ishapes/SphereIShape.h \
+    lib/ObjLoader.h \
     scenegraph/Scene.h \
     scenegraph/OpenGLScene.h \
     scenegraph/ShapesScene.h \

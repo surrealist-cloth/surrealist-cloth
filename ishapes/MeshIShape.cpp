@@ -5,6 +5,7 @@
 
 #include "ishapes/MeshIShape.h"
 #include "ishapes/IShape.h"
+#include "lib/ObjLoader.h"
 
 //Do it with pointers
 //Triangles with collisions
@@ -20,16 +21,17 @@
 //could have inverse point point to each other.
 
 MeshIShape::MeshIShape(std::string meshfile) {
-    if (meshfile == "cube") {
-        loadCube();
-    } else if (meshfile == "triangles") {
-        loadTwoTriangles();
-    } else {
-        loadDummyCloth();
-    }
-    pruneInvalidTriangles();
+    ObjLoader loader(meshfile);
+    m_normals = loader.m_normals;
+    m_triangles = loader.m_triangles;
+    m_vertexNormals = loader.m_vertexNormals;
+    m_vertices = loader.m_vertices;
+
     loadVertexTriangles();
-    loadVertexNormals();
+    m_triangleNormals.reserve(m_triangles.size());
+    for (const Tri tri: m_triangles) {
+        m_triangleNormals.push_back(glm::normalize(getTriangleNormal(tri)));
+    }
 }
 
 MeshIShape::MeshIShape(std::vector<glm::vec3> vertices, std::vector<Tri> triangles):
@@ -101,10 +103,11 @@ void MeshIShape::pruneInvalidTriangles()
 }
 
 glm::vec3 MeshIShape::getNormalBarycentric(int triIndex, glm::vec3 point) const {
+    const Tri triNormal = m_normals[triIndex];
+    const glm::vec3 n_1 = m_vertexNormals[triNormal.v_1];
+    const glm::vec3 n_2 = m_vertexNormals[triNormal.v_2];
+    const glm::vec3 n_3 = m_vertexNormals[triNormal.v_3];
     const Tri tri = m_triangles[triIndex];
-    const glm::vec3 n_1 = m_vertexNormals[tri.v_1];
-    const glm::vec3 n_2 = m_vertexNormals[tri.v_2];
-    const glm::vec3 n_3 = m_vertexNormals[tri.v_3];
     const glm::vec3 v_1 = m_vertices[tri.v_1];
     const glm::vec3 v_2 = m_vertices[tri.v_2];
     const glm::vec3 v_3 = m_vertices[tri.v_3];
@@ -157,6 +160,8 @@ void MeshIShape::loadVertexNormals() {
     for (int i = 0; i < m_triangleNormals.size(); i++) {
         m_triangleNormals[i] = glm::normalize(m_triangleNormals[i]);
     }
+
+    m_normals = m_triangles;
 }
 
 glm::vec3 MeshIShape::getTriangleNormal(const Tri tri) const { //Returns unnormalized Normal!
