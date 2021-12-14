@@ -22,6 +22,7 @@ void SupportCanvas2D::resize(int width, int height) {
     // clamp negative sizes so we always have at least one pixel
     if (width < 1) width = 1;
     if (height < 1) height = 1;
+    if (width == m_image->width() && height == m_image->height()) return;
 
     delete m_image;
     m_image = new QImage(width, height, QImage::Format_RGBX8888 /* this corresponds to the RGBA struct */);

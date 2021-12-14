@@ -58,6 +58,16 @@ void Scene::parse(Scene *sceneToFill, CS123ISceneParser *parser) {
     sceneToFill->setupShapes();
 }
 
+void Scene::setFrame(int frame)
+{
+    m_frame = frame;
+}
+
+int Scene::getFrame() const
+{
+    return m_frame;
+}
+
 void Scene::addPrimitive(const CS123ScenePrimitive &scenePrimitive, const glm::mat4x4 &matrix) {
     m_primitives.push_back(scenePrimitive);
     m_transformations.push_back(matrix);

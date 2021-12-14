@@ -732,7 +732,16 @@ bool CS123XmlSceneParser::parsePrimitive(const QDomElement &prim, CS123SceneNode
             std::cout << "mesh object must specify filename" << std::endl;
             return false;
         }
+    } else if (primType == "cloth") {
+        primitive->type = PrimitiveType::PRIMITIVE_CLOTH;
+        if (prim.hasAttribute("directory")) {
+            primitive->meshfile = prim.attribute("directory").toStdString();
+        } else {
+            std::cout << "cloth object must specify directory" << std::endl;
+            return false;
+        }
     }
+
 
     // Iterate over child elements
     QDomNode childNode = prim.firstChild();

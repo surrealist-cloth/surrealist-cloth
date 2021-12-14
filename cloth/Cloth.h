@@ -6,6 +6,7 @@
 
 #include "ClothConstraint.h"
 #include "ClothMass.h"
+#include "ishapes/MeshIShape.h"
 
 class Cloth
 {
@@ -20,12 +21,17 @@ class Cloth
     void toObj(const std::string &filename);
     ClothMass &massAt(int row, int col);
     void translateMass(ClothMass &mass, const glm::vec3 &translation);
+    MeshIShape toMesh() const;
 
   protected:
     int m_rows;
     int m_cols;
     std::vector<std::unique_ptr<ClothMass>> m_masses;
     std::vector<std::unique_ptr<ClothConstraint>> m_constraints;
+
+    inline std::vector<glm::vec3> getVertices() const;
+    inline std::vector<Tri> getFaces() const;
+
     // constants
     const float m_width = 14.f;
     const float m_height = 10.f;

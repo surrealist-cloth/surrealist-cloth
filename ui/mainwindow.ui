@@ -1226,9 +1226,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="rayAntiAliasing">
+         <widget class="QCheckBox" name="rayCloth">
           <property name="text">
-           <string>Anti-aliasing</string>
+           <string>Cloth</string>
           </property>
          </widget>
         </item>

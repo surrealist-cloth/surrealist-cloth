@@ -95,18 +95,6 @@ void Canvas2D::mouseDown(int x, int y)
 {
     m_brush->brushDown(x, y, this, settings.fixAlphaBlending);
     std::cout << "Canvas2d::mouseDown() called" << std::endl;
-    Cloth cloth(55, 45);
-    cloth.massAt(0, 0).setFixed(true);
-    cloth.massAt(0, 44).setFixed(true);
-    // cloth.massAt(0, 0).translate(glm::vec3(-2, 0, 0));
-    // cloth.massAt(0, 44).translate(glm::vec3(2, 0, 0));
-    for (int i = 0; i < 192; i++)
-    {
-        cloth.addForce(glm::vec3(0, -0.2, 0) * 0.25f);
-        cloth.addWindForce(glm::vec3(0.5, 0, 0.2) * 0.25f);
-        cloth.step();
-        cloth.toObj("/Users/dakis/Documents/CURRENT_SEMESTER/course/cs1230/surrealist-cloth/data/cloth_obj/frame" + std::to_string(i) + ".obj");
-    }
 }
 
 void Canvas2D::mouseDragged(int x, int y)
@@ -174,12 +162,11 @@ void Canvas2D::renderPixel(CS123SceneCameraData *camera, const glm::mat4 &invCam
              glm::min(255, static_cast<int>(color.z * 255)), 255);
 }
 
-void Canvas2D::renderImage(CS123SceneCameraData *camera, int width, int height)
+void Canvas2D::renderFrame(CS123SceneCameraData *camera, int width, int height)
 {
-    if (m_rayScene)
+    if (m_rayScene && m_isRendering)
     {
         int numSuperSamples = settings.useSuperSampling ? glm::max(settings.numSuperSamples, 1) : 1;
-        m_isRendering = true;
         resize(width, height);
         std::vector<RGBA> superPix;
         int superWidth = width * numSuperSamples;
@@ -232,7 +219,17 @@ void Canvas2D::renderImage(CS123SceneCameraData *camera, int width, int height)
             filter.applyRGBA(superPix.data(), data(), superWidth, superHeight);
         }
     }
-    m_isRendering = false;
+}
+
+void Canvas2D::startRender()
+{
+    m_isRendering = true;
+}
+
+void Canvas2D::renderImage(CS123SceneCameraData *camera, int width, int height)
+{
+    startRender();
+    renderFrame(camera, width, height);
 }
 
 void Canvas2D::cancelRender()
