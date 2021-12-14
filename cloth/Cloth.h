@@ -11,7 +11,7 @@
 class Cloth
 {
   public:
-    Cloth(int rows, int cols);
+    Cloth(int rows, int cols, float timeStep = 0.02, float width = 14, float height = 10);
     ~Cloth();
     void step();
     void translate(const glm::vec3 &direction);
@@ -33,10 +33,10 @@ class Cloth
     inline std::vector<Tri> getFaces() const;
 
     // constants
-    const float m_width = 14.f;
-    const float m_height = 10.f;
+    float m_timeStep;
+    float m_width;
+    float m_height;
     const float m_stiffness = 0.2f;
-    const float m_timeStep = 0.25f;
     const float m_damping = 0.01f;
     const int m_constraintIterations = 15;
     const float m_selfCollisionDistance = 0.05f;

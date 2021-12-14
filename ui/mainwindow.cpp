@@ -321,7 +321,7 @@ void MainWindow::fileOpen() {
     // the scene doesn't crash. If you can find a better solution
     // feel free to change this.
     activateCanvas3D();
-    QString file = QFileDialog::getOpenFileName(this, QString(), "/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data");
+    QString file = QFileDialog::getOpenFileName(this, QString(), DEFAULT_FILE_DIRECTORY);
     if (!file.isNull()) {
         if (file.endsWith(".xml")) {
             m_sceneParser = std::unique_ptr<CS123XmlSceneParser>(new CS123XmlSceneParser(file.toLatin1().data()));
@@ -400,10 +400,10 @@ void MainWindow::renderImage() {
             ui->rayRenderButton->setHidden(true);
             ui->rayStopRenderingButton->setHidden(false);
             ui->canvas2D->startRender();
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 600; i++) {
                 glScene->setFrame(i);
                 ui->canvas2D->setScene(new RayScene(*glScene));
-                QSize outputSize(500, 400);
+                QSize outputSize(1920, 1080);
                 CS123SceneCameraData camera;
                 std::vector<RGBA> output(outputSize.width() * outputSize.height());
                 m_sceneParser->getCameraData(camera);
@@ -411,7 +411,7 @@ void MainWindow::renderImage() {
                 ui->canvas2D->update();
                 QCoreApplication::processEvents();
                 // export image somehow
-                std::string outputPath = "/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data/render/" + std::to_string(i) + ".png";
+                std::string outputPath = RENDER_OUTPUT_DIRECTORY + std::to_string(i) + ".png";
                 ui->canvas2D->saveImage(QString::fromStdString(outputPath));
             }
             ui->canvas2D->cancelRender();
@@ -465,7 +465,7 @@ void MainWindow::setAllEnabled(bool enabled) {
     actions += ui->actionNew;
     actions += ui->actionOpen;
     actions += ui->actionSave;
-    actions += ui->actionRevert;
+    actions += ui->actionCloth;
     actions += ui->actionCopy3Dto2D;
     actions += ui->actionClear;
     actions += ui->actionQuit;
@@ -487,23 +487,6 @@ void MainWindow::activateCanvas3D() {
 void MainWindow::clearImage()
 {
     ui->canvas2D->clearImage();
-}
-
-void MainWindow::revertImage()
-{
-    // ui->canvas2D->revertImage();
-    Cloth cloth(10, 8);
-    cloth.massAt(0, 0).setFixed(true);
-    cloth.massAt(0, 7).setFixed(true);
-    // cloth.massAt(0, 0).translate(glm::vec3(-2, 0, 0));
-    // cloth.massAt(0, 44).translate(glm::vec3(2, 0, 0));
-    for (int i = 0; i < 192; i++)
-    {
-        cloth.addForce(glm::vec3(0, -0.2, 0) * 0.25f);
-        cloth.addWindForce(glm::vec3(0.5, 0, 0.2) * 0.25f);
-        cloth.step();
-        cloth.toObj("/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data/cloth/" + std::to_string(i) + ".obj");
-    }
 }
 
 void MainWindow::setCameraAxisX() {
@@ -563,4 +546,25 @@ void MainWindow::updateCameraHeightAngle() {
 
 void MainWindow::setCameraAxonometric() {
     m_canvas3D->setCameraAxonometric();
+}
+
+void MainWindow::revertImage()
+{
+    Cloth cloth(20, 16);
+    cloth.massAt(0, 0).setFixed(true);
+    cloth.massAt(0, 15).setFixed(true);
+    // cloth.massAt(0, 0).translate(glm::vec3(-2, 0, 0));
+    // cloth.massAt(0, 44).translate(glm::vec3(2, 0, 0));
+    for (int i = 0; i < 600; i++)
+    {
+        cloth.addForce(glm::vec3(0, -0.2, 0) * 0.25f);
+        if (i < 300) {
+            cloth.addWindForce(glm::vec3(0.5, 0, 0.2) * 0.3f);
+        } else {
+            cloth.addWindForce(glm::vec3(-0.3, 0, -0.2) * 0.3f);
+        }
+
+        cloth.step();
+        cloth.toObj(CLOTH_OUTPUT_DIRECTORY + std::to_string(i) + ".obj");
+    }
 }

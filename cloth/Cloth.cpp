@@ -7,7 +7,7 @@ Cloth::~Cloth()
 {
 }
 
-Cloth::Cloth(int rows, int cols) : m_rows(rows), m_cols(cols)
+Cloth::Cloth(int rows, int cols, float timeStep, float width, float height) : m_rows(rows), m_cols(cols), m_timeStep(timeStep), m_width(width), m_height(height)
 {
     // create masses
     m_masses.reserve(m_rows * m_cols);
@@ -168,7 +168,7 @@ void Cloth::toObj(const std::string &filename)
     std::vector<Tri> faces = getFaces();
     for (Tri& face: faces)
     {
-        file << "f " << face.v_1 << " " << face.v_2 << " " << face.v_3 << std::endl;
+        file << "f " << face.v_1 + 1 << " " << face.v_2 + 1 << " " << face.v_3 + 1 << std::endl;
     }
     file.close();
     std::cout << "Wrote " << vertices.size() << " vertices and " << faces.size() << " faces" << std::endl;
@@ -213,11 +213,11 @@ std::vector<Tri> Cloth::getFaces() const
     {
         for (int j = 0; j < m_cols - 1; j++)
         {
-            int index = i * m_cols + j + 1;
-            faces.push_back(Tri(index, index + m_cols, index + m_cols + 1));
-            faces.push_back(Tri(index, index + m_cols + 1, index + 1));
-//            faces.push_back(Tri(index, index + m_cols + 1, index + m_cols));
-//            faces.push_back(Tri(index, index + 1, index + m_cols + 1));
+            int index = i * m_cols + j;
+            faces.push_back(Tri(index, index + m_cols, index + 1));
+            faces.push_back(Tri(index + m_cols, index + m_cols + 1, index + 1));
+//            faces.push_back(Tri(index + 1, index + m_cols, index));
+//            faces.push_back(Tri(index + 1, index + m_cols + 1, index + m_cols));
         }
     }
     return faces;

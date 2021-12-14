@@ -1930,7 +1930,7 @@
     <addaction name="actionNew"/>
     <addaction name="actionOpen"/>
     <addaction name="actionSave"/>
-    <addaction name="actionRevert"/>
+    <addaction name="actionCloth"/>
     <addaction name="actionClear"/>
     <addaction name="actionCopy3Dto2D"/>
     <addaction name="actionUseOrbitingCamera"/>
@@ -1977,15 +1977,12 @@
     <string>Ctrl+Q</string>
    </property>
   </action>
-  <action name="actionRevert">
+  <action name="actionCloth">
    <property name="enabled">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>&amp;Revert Image</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+R</string>
+    <string>&amp;Simulate cloth</string>
    </property>
   </action>
   <action name="actionCopy3Dto2D">
@@ -2050,12 +2047,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>208</x>
-     <y>1178</y>
+     <x>219</x>
+     <y>1236</y>
     </hint>
     <hint type="destinationlabel">
-     <x>215</x>
-     <y>1206</y>
+     <x>219</x>
+     <y>1266</y>
     </hint>
    </hints>
   </connection>
@@ -2066,12 +2063,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>195</x>
-     <y>1249</y>
+     <x>207</x>
+     <y>1303</y>
     </hint>
     <hint type="destinationlabel">
-     <x>178</x>
-     <y>1277</y>
+     <x>173</x>
+     <y>1328</y>
     </hint>
    </hints>
   </connection>
@@ -2082,12 +2079,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>195</x>
-     <y>1249</y>
+     <x>207</x>
+     <y>1303</y>
     </hint>
     <hint type="destinationlabel">
-     <x>226</x>
-     <y>1276</y>
+     <x>219</x>
+     <y>1333</y>
     </hint>
    </hints>
   </connection>
@@ -2098,12 +2095,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>195</x>
-     <y>1320</y>
+     <x>207</x>
+     <y>1370</y>
     </hint>
     <hint type="destinationlabel">
-     <x>226</x>
-     <y>1347</y>
+     <x>219</x>
+     <y>1400</y>
     </hint>
    </hints>
   </connection>
@@ -2114,12 +2111,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>195</x>
-     <y>1320</y>
+     <x>207</x>
+     <y>1370</y>
     </hint>
     <hint type="destinationlabel">
-     <x>226</x>
-     <y>1374</y>
+     <x>219</x>
+     <y>1429</y>
     </hint>
    </hints>
   </connection>
@@ -2130,12 +2127,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>195</x>
-     <y>1320</y>
+     <x>207</x>
+     <y>1370</y>
     </hint>
     <hint type="destinationlabel">
-     <x>178</x>
-     <y>1348</y>
+     <x>173</x>
+     <y>1395</y>
     </hint>
    </hints>
   </connection>
@@ -2146,12 +2143,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>195</x>
-     <y>1320</y>
+     <x>207</x>
+     <y>1370</y>
     </hint>
     <hint type="destinationlabel">
-     <x>178</x>
-     <y>1375</y>
+     <x>173</x>
+     <y>1424</y>
     </hint>
    </hints>
   </connection>
@@ -2162,12 +2159,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>232</x>
-     <y>1837</y>
+     <x>219</x>
+     <y>1840</y>
     </hint>
     <hint type="destinationlabel">
-     <x>78</x>
-     <y>1864</y>
+     <x>69</x>
+     <y>1870</y>
     </hint>
    </hints>
   </connection>
@@ -2179,7 +2176,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>63</x>
-     <y>1793</y>
+     <y>1785</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2194,8 +2191,8 @@
    <slot>uncheckAllRayFeatures()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>241</x>
-     <y>1793</y>
+     <x>231</x>
+     <y>1785</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2211,7 +2208,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>119</x>
-     <y>2353</y>
+     <y>2416</y>
     </hint>
     <hint type="destinationlabel">
      <x>116</x>
@@ -2227,7 +2224,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>119</x>
-     <y>2353</y>
+     <y>2416</y>
     </hint>
     <hint type="destinationlabel">
      <x>116</x>
@@ -2242,8 +2239,8 @@
    <slot>setCameraAxisX()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>110</x>
-     <y>2693</y>
+     <x>117</x>
+     <y>2764</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2258,8 +2255,8 @@
    <slot>setCameraAxisY()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>110</x>
-     <y>2727</y>
+     <x>117</x>
+     <y>2794</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2274,8 +2271,8 @@
    <slot>setCameraAxonometric()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>232</x>
-     <y>2727</y>
+     <x>219</x>
+     <y>2794</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2290,8 +2287,8 @@
    <slot>updateCameraTranslation()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>86</x>
-     <y>2436</y>
+     <x>81</x>
+     <y>2509</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2306,8 +2303,8 @@
    <slot>updateCameraTranslation()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>2436</y>
+     <x>148</x>
+     <y>2509</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2322,8 +2319,8 @@
    <slot>updateCameraTranslation()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>226</x>
-     <y>2436</y>
+     <x>215</x>
+     <y>2509</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2338,8 +2335,8 @@
    <slot>updateCameraRotationU()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>86</x>
-     <y>2552</y>
+     <x>81</x>
+     <y>2631</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2354,8 +2351,8 @@
    <slot>updateCameraRotationN()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>226</x>
-     <y>2552</y>
+     <x>215</x>
+     <y>2631</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2370,8 +2367,8 @@
    <slot>updateCameraRotationV()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>156</x>
-     <y>2552</y>
+     <x>148</x>
+     <y>2631</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2386,8 +2383,8 @@
    <slot>updateCameraClip()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>173</x>
-     <y>2799</y>
+     <x>165</x>
+     <y>2860</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2402,8 +2399,8 @@
    <slot>updateCameraClip()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>241</x>
-     <y>2798</y>
+     <x>231</x>
+     <y>2865</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2418,8 +2415,8 @@
    <slot>updateCameraClip()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>173</x>
-     <y>2826</y>
+     <x>165</x>
+     <y>2889</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2434,8 +2431,8 @@
    <slot>updateCameraClip()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>241</x>
-     <y>2825</y>
+     <x>231</x>
+     <y>2894</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2450,8 +2447,8 @@
    <slot>updateCameraHeightAngle()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>173</x>
-     <y>2772</y>
+     <x>165</x>
+     <y>2831</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2466,8 +2463,8 @@
    <slot>updateCameraHeightAngle()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>241</x>
-     <y>2771</y>
+     <x>231</x>
+     <y>2836</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2515,7 +2512,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
-     <y>2132</y>
+     <y>2223</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2546,12 +2543,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>211</x>
-     <y>1249</y>
+     <x>219</x>
+     <y>1303</y>
     </hint>
     <hint type="destinationlabel">
-     <x>69</x>
-     <y>1277</y>
+     <x>61</x>
+     <y>1333</y>
     </hint>
    </hints>
   </connection>
@@ -2562,12 +2559,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>212</x>
-     <y>1418</y>
+     <x>219</x>
+     <y>1466</y>
     </hint>
     <hint type="destinationlabel">
-     <x>61</x>
-     <y>1446</y>
+     <x>55</x>
+     <y>1496</y>
     </hint>
    </hints>
   </connection>
@@ -2578,12 +2575,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>212</x>
-     <y>1418</y>
+     <x>219</x>
+     <y>1466</y>
     </hint>
     <hint type="destinationlabel">
-     <x>178</x>
-     <y>1446</y>
+     <x>173</x>
+     <y>1491</y>
     </hint>
    </hints>
   </connection>
@@ -2594,12 +2591,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>212</x>
-     <y>1418</y>
+     <x>219</x>
+     <y>1466</y>
     </hint>
     <hint type="destinationlabel">
-     <x>226</x>
-     <y>1445</y>
+     <x>219</x>
+     <y>1496</y>
     </hint>
    </hints>
   </connection>
@@ -2610,8 +2607,8 @@
    <slot>resetUpVector()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>224</x>
-     <y>2628</y>
+     <x>219</x>
+     <y>2695</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2627,7 +2624,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>130</x>
-     <y>2353</y>
+     <y>2416</y>
     </hint>
     <hint type="destinationlabel">
      <x>126</x>
@@ -2643,7 +2640,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>130</x>
-     <y>560</y>
+     <y>604</y>
     </hint>
     <hint type="destinationlabel">
      <x>126</x>
@@ -2659,7 +2656,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>20</x>
-     <y>2166</y>
+     <y>2253</y>
     </hint>
     <hint type="destinationlabel">
      <x>278</x>
@@ -2675,7 +2672,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>119</x>
-     <y>1573</y>
+     <y>1627</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2706,8 +2703,8 @@
    <slot>setCameraAxisZ()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>232</x>
-     <y>2693</y>
+     <x>219</x>
+     <y>2764</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>
@@ -2738,12 +2735,12 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>159</x>
-     <y>1320</y>
+     <x>171</x>
+     <y>1370</y>
     </hint>
     <hint type="destinationlabel">
-     <x>35</x>
-     <y>1348</y>
+     <x>29</x>
+     <y>1400</y>
     </hint>
    </hints>
   </connection>
@@ -2754,17 +2751,17 @@
    <slot>setEnabled(bool)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>159</x>
-     <y>1320</y>
+     <x>171</x>
+     <y>1370</y>
     </hint>
     <hint type="destinationlabel">
-     <x>35</x>
-     <y>1375</y>
+     <x>29</x>
+     <y>1429</y>
     </hint>
    </hints>
   </connection>
   <connection>
-   <sender>actionRevert</sender>
+   <sender>actionCloth</sender>
    <signal>triggered()</signal>
    <receiver>MainWindow</receiver>
    <slot>revertImage()</slot>
@@ -2787,7 +2784,7 @@
    <hints>
     <hint type="sourcelabel">
      <x>126</x>
-     <y>2852</y>
+     <y>2924</y>
     </hint>
     <hint type="destinationlabel">
      <x>299</x>

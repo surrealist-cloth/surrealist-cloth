@@ -142,7 +142,6 @@ HEADERS += \
     ui/Settings.h \
     ui/mainwindow.h \
     ui/Databinding.h \
-    ui_mainwindow.h \
     gl/shaders/Shader.h \
     gl/GLDebug.h \
     gl/shaders/ShaderAttribLocations.h \

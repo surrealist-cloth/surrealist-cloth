@@ -6,6 +6,11 @@
 #include <QButtonGroup>
 #include <QMainWindow>
 
+#define DEFAULT_FILE_DIRECTORY "/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data"
+#define CLOTH_OUTPUT_DIRECTORY "/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data/cloth/"
+#define RENDER_OUTPUT_DIRECTORY "/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data/render/"
+
+
 class CS123XmlSceneParser;
 class SupportCanvas3D;
 
@@ -93,7 +98,6 @@ public slots:
     // Clears the 2D canvas
     void clearImage();
 
-    // Reverts the 2D canvas to the last opened image
     void revertImage();
 
     // Sets the current tab on the UI to the 2D canvas view.
