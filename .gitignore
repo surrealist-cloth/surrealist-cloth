@@ -21,3 +21,5 @@ surrealist-cloth
 surrealist-cloth.app
 .vscode
 .idea
+data/render/*.png
+data/cloth/*.obj

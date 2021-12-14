@@ -1,6 +1,7 @@
 #include "Cloth.h"
 #include <fstream>
 #include <iostream>
+#include "ishapes/MeshIShape.h"
 
 Cloth::~Cloth()
 {
@@ -152,30 +153,25 @@ void Cloth::avoidSelfCollisions()
 void Cloth::toObj(const std::string &filename)
 {
     std::ofstream file(filename);
-    if (file.is_open())
-    {
-        std::cout << "Writing to " << filename << std::endl;
-        int count = 0;
-        for (auto &mass : m_masses)
-        {
-            file << "v " << mass->getPosition().x << " " << mass->getPosition().y << " " << mass->getPosition().z
-                 << std::endl;
-            count++;
-        }
-        std::cout << "Wrote " << count << " vertices" << std::endl;
-        for (int i = 0; i < m_rows - 1; i++)
-        {
-            for (int j = 0; j < m_cols - 1; j++)
-            {
-                int index = i * m_cols + j + 1;
-                file << "f " << index << " " << index + m_cols << " " << index + m_cols + 1 << std::endl;
-                file << "f " << index << " " << index + m_cols + 1 << " " << index + 1 << std::endl;
-                // file << "f " << index << " " << index + m_cols + 1 << " " << index + m_cols << std::endl;
-                // file << "f " << index << " " << index + 1 << " " << index + m_cols + 1 << std::endl;
-            }
-        }
-        file.close();
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file." << std::endl;
+        return;
     }
+
+    std::cout << "Writing to " << filename << std::endl;
+    std::vector<glm::vec3> vertices = getVertices();
+    for (glm::vec3 &vertex: vertices)
+    {
+        file << "v " << vertex.x << " " << vertex.y << " " << vertex.z << std::endl;
+    }
+
+    std::vector<Tri> faces = getFaces();
+    for (Tri& face: faces)
+    {
+        file << "f " << face.v_1 << " " << face.v_2 << " " << face.v_3 << std::endl;
+    }
+    file.close();
+    std::cout << "Wrote " << vertices.size() << " vertices and " << faces.size() << " faces" << std::endl;
 }
 
 ClothMass &Cloth::massAt(int i, int j)
@@ -193,4 +189,36 @@ void Cloth::translateMass(ClothMass &mass, const glm::vec3 &translation)
             std::cout << "Updating constraint" << std::endl;
         }
     }
+}
+
+MeshIShape Cloth::toMesh() const
+{
+    return MeshIShape(getVertices(), getFaces());
+}
+
+std::vector<glm::vec3> Cloth::getVertices() const
+{
+    std::vector<glm::vec3> vertices;
+    for (auto &mass : m_masses)
+    {
+        vertices.push_back(mass->getPosition());
+    }
+    return vertices;
+}
+
+std::vector<Tri> Cloth::getFaces() const
+{
+    std::vector<Tri> faces;
+    for (int i = 0; i < m_rows - 1; i++)
+    {
+        for (int j = 0; j < m_cols - 1; j++)
+        {
+            int index = i * m_cols + j + 1;
+            faces.push_back(Tri(index, index + m_cols, index + m_cols + 1));
+            faces.push_back(Tri(index, index + m_cols + 1, index + 1));
+//            faces.push_back(Tri(index, index + m_cols + 1, index + m_cols));
+//            faces.push_back(Tri(index, index + 1, index + m_cols + 1));
+        }
+    }
+    return faces;
 }

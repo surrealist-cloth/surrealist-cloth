@@ -61,7 +61,7 @@ void Settings::loadSettingsOrDefaults() {
     // Ray
     useSuperSampling = s.value("useSuperSampling", false).toBool();
     numSuperSamples = s.value("numSuperSamples", 2).toInt();
-    useAntiAliasing = s.value("useAntiAliasing", true).toBool();
+    useCloth = s.value("useCloth", true).toBool();
     useShadows = s.value("useShadows", false).toBool();
     useTextureMapping = s.value("useTextureMapping", false).toBool();
     useRecursive = s.value("useRecursive", false).toBool();
@@ -121,7 +121,7 @@ void Settings::saveSettings() {
     // Ray
     s.setValue("useSuperSampling", useSuperSampling);
     s.setValue("numSuperSamples", numSuperSamples);
-    s.setValue("useAntiAliasing", useAntiAliasing);
+    s.setValue("useCloth", useCloth);
     s.setValue("useShadows", useShadows);
     s.setValue("useTextureMapping", useTextureMapping);
     s.setValue("useRecursive", useRecursive);

@@ -45,6 +45,9 @@ RayScene::RayScene(Scene &scene) :
             case PrimitiveType::PRIMITIVE_MESH:
                 m_ishapes.push_back(std::make_unique<MeshIShape>(primitive.meshfile));
                 break;
+            case PrimitiveType::PRIMITIVE_CLOTH:
+                m_ishapes.push_back(std::make_unique<MeshIShape>(primitive.meshfile + std::to_string(scene.getFrame()) + ".obj"));
+                break;
             default:
                 m_ishapes.push_back(std::make_unique<EmptyIShape>());
         }
@@ -103,18 +106,19 @@ glm::vec3 RayScene::illuminate(ShapeIntersection& s, glm::vec3 pos)
         // ray trace to see if the path to the light source is blocked by the object itself
         Ray lightRay(s.intersection, -l, EPSILON);
 
-        if (!isOccluded(lightRay, s, distance)) {
-            // add texture if enabled
-            float blend = 0.f;
-            glm::vec4 textureColor = glm::vec4(0);
-            if (settings.useTextureMapping) {
-                blend = s.primitive.material.blend;
-                textureColor = getTexture(s);
-            }
-            // diffuse + texture
-            color += attenuation * light.color * (glm::max(glm::dot(s.normal, -l), 0.f) * (blend * textureColor + global.kd * (1.f - blend) * s.primitive.material.cDiffuse) +
-                                                  global.ks * glm::pow(glm::max(glm::dot(v, r), 0.f), s.primitive.material.shininess) * s.primitive.material.cSpecular);
+        if (isOccluded(lightRay, s, distance)) {
+            continue;
         }
+        // add texture if enabled
+        float blend = 0.f;
+        glm::vec4 textureColor = glm::vec4(0);
+        if (settings.useTextureMapping) {
+            blend = s.primitive.material.blend;
+            textureColor = getTexture(s);
+        }
+        // diffuse + texture
+        color += attenuation * light.color * (glm::max(glm::dot(s.normal, -l), 0.f) * (blend * textureColor + global.kd * (1.f - blend) * s.primitive.material.cDiffuse) +
+                                              global.ks * glm::pow(glm::max(glm::dot(v, r), 0.f), s.primitive.material.shininess) * s.primitive.material.cSpecular);
     }
     return glm::vec3(color);
 }
@@ -292,7 +296,9 @@ bool RayScene::isOccluded(Ray &lightRay, ShapeIntersection &s, float maxT)
 {
     if (settings.useShadows) {
         std::unique_ptr<ShapeIntersection> intersection = intersect(lightRay);
+
         if (!intersection) return false;
+
         return intersection->t < maxT;
     } else {
         // put light ray in object space
@@ -308,8 +314,6 @@ std::unique_ptr<ShapeIntersection> RayScene::intersect(Ray& ray)
 {
     std::vector<CS123ScenePrimitive> primitives = getPrimitives();
     std::vector<glm::mat4> invTransformations = getInverseTransformations();
-
-    assert(invTransformations.size() == primitives.size());
 
     float matchT = 0.f;
     bool isMatch = false;

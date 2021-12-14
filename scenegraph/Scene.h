@@ -32,7 +32,8 @@ public:
     const std::vector<CS123ScenePrimitive>& getPrimitives() { return m_primitives; };
     const std::vector<glm::mat4>& getTransformations() { return m_transformations; };
     const std::vector<glm::mat4>& getInverseTransformations() { return m_inverseTransformations; };
-
+    void setFrame(int frame);
+    int getFrame() const;
 
 protected:
 
@@ -55,7 +56,7 @@ protected:
     std::vector<glm::mat4x4> m_transformations;
     std::vector<glm::mat4x4> m_inverseTransformations;
     std::vector<std::unique_ptr<OpenGLShape>> m_shapes;
-
+    int m_frame = 0;
 private:
     static void dfsNode(Scene* sceneToFill, CS123SceneNode* node, glm::mat4x4 matrix);
 

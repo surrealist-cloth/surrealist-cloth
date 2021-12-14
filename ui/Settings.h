@@ -126,7 +126,7 @@ struct Settings {
     // Ray
     bool useSuperSampling;      // Enable or disable super-sampling.
     int numSuperSamples;        // Controls the number of samples per pixel.
-    bool useAntiAliasing;       // Enable or disable anti-aliasing.
+    bool useCloth;
     bool useShadows;            // Enable or disable shadows.
     bool useTextureMapping;     // Enable or disable texture mapping.
     bool useRecursive;
