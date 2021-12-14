@@ -105,7 +105,7 @@ void Canvas2D::mouseDown(int x, int y)
         cloth.addForce(glm::vec3(0, -0.2, 0) * 0.25f);
         cloth.addWindForce(glm::vec3(0.5, 0, 0.2) * 0.25f);
         cloth.step();
-        cloth.toObj("/Users/dylan/Desktop/clothtest/frame" + std::to_string(i) + ".obj");
+        cloth.toObj("/Users/dakis/Documents/CURRENT_SEMESTER/course/cs1230/surrealist-cloth/data/cloth_obj/frame" + std::to_string(i) + ".obj");
     }
 }
 
