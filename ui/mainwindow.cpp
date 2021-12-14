@@ -12,6 +12,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QThreadPool>
+#include "cloth/Cloth.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -225,7 +226,7 @@ void MainWindow::dataBind() {
     // Ray dock
     BIND(BoolBinding::bindCheckbox(ui->raySuperSamping,          settings.useSuperSampling))
     BIND(IntBinding::bindTextbox(ui->raySuperSamplesTextbox,   settings.numSuperSamples))
-    BIND(BoolBinding::bindCheckbox(ui->rayAntiAliasing,          settings.useAntiAliasing))
+    BIND(BoolBinding::bindCheckbox(ui->rayCloth,          settings.useCloth))
     BIND(BoolBinding::bindCheckbox(ui->rayShadows,               settings.useShadows))
     BIND(BoolBinding::bindCheckbox(ui->rayTextureMapping,        settings.useTextureMapping))
     BIND(BoolBinding::bindCheckbox(ui->rayRecursive,            settings.useRecursive))
@@ -285,7 +286,7 @@ void MainWindow::settingsChanged() {
 
 void MainWindow::setAllRayFeatures(bool checked) {
     ui->raySuperSamping->setChecked(checked);
-    ui->rayAntiAliasing->setChecked(checked);
+    ui->rayCloth->setChecked(checked);
     ui->rayShadows->setChecked(checked);
     ui->rayTextureMapping->setChecked(checked);
     ui->rayRecursive->setChecked(checked);
@@ -394,30 +395,58 @@ void MainWindow::renderImage() {
 
     OpenGLScene *glScene = m_canvas3D->getScene();
     if (glScene && m_sceneParser) {
-        // Set up RayScene from glScene and call ui->canvas2D->setScene()
-        ui->canvas2D->setScene(new RayScene(*glScene)); // it's safe to use new here because setScene transfers ownership to a unique_ptr
+        if (settings.useCloth) {
+            setAllEnabled(false);
+            ui->rayRenderButton->setHidden(true);
+            ui->rayStopRenderingButton->setHidden(false);
+            ui->canvas2D->startRender();
+            for (int i = 0; i < 100; i++) {
+                glScene->setFrame(i);
+                ui->canvas2D->setScene(new RayScene(*glScene));
+                QSize outputSize(500, 400);
+                CS123SceneCameraData camera;
+                std::vector<RGBA> output(outputSize.width() * outputSize.height());
+                m_sceneParser->getCameraData(camera);
+                ui->canvas2D->renderFrame(&camera, outputSize.width(), outputSize.height());
+                ui->canvas2D->update();
+                QCoreApplication::processEvents();
+                // export image somehow
+                std::string outputPath = "/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data/render/" + std::to_string(i) + ".png";
+                ui->canvas2D->saveImage(QString::fromStdString(outputPath));
+            }
+            ui->canvas2D->cancelRender();
+            // Swap the "stop rendering" button for the "render" button
+            ui->rayRenderButton->setHidden(false);
+            ui->rayStopRenderingButton->setHidden(true);
 
-        // Disable the UI so the user can't interfere with the raytracing
-        setAllEnabled(false);
+            // Enable the UI again
+            setAllEnabled(true);
+        } else {
+            // Set up RayScene from glScene and call ui->canvas2D->setScene()
+            ui->canvas2D->setScene(new RayScene(*glScene)); // it's safe to use new here because setScene transfers ownership to a unique_ptr
 
-        // Swap the "render" button for the "stop rendering" button
-        ui->rayRenderButton->setHidden(true);
-        ui->rayStopRenderingButton->setHidden(false);
+            // Disable the UI so the user can't interfere with the raytracing
+            setAllEnabled(false);
 
-        // Render the image
-        QSize activeTabSize = ui->tabWidget->currentWidget()->size();
-        // ui->canvas2D->renderImage(m_canvas3D->getCamera(), activeTabSize.width(), activeTabSize.height());
-        CS123SceneCameraData camera;
-        m_sceneParser->getCameraData(camera);
-        ui->canvas2D->renderImage(&camera, activeTabSize.width(), activeTabSize.height());
-        ui->canvas2D->update();
+            // Swap the "render" button for the "stop rendering" button
+            ui->rayRenderButton->setHidden(true);
+            ui->rayStopRenderingButton->setHidden(false);
 
-        // Swap the "stop rendering" button for the "render" button
-        ui->rayRenderButton->setHidden(false);
-        ui->rayStopRenderingButton->setHidden(true);
+            // Render the image
+            QSize activeTabSize = ui->tabWidget->currentWidget()->size();
+            // ui->canvas2D->renderImage(m_canvas3D->getCamera(), activeTabSize.width(), activeTabSize.height());
+            CS123SceneCameraData camera;
+            m_sceneParser->getCameraData(camera);
+            ui->canvas2D->renderImage(&camera, activeTabSize.width(), activeTabSize.height());
+            ui->canvas2D->update();
 
-        // Enable the UI again
-        setAllEnabled(true);
+            // Swap the "stop rendering" button for the "render" button
+            ui->rayRenderButton->setHidden(false);
+            ui->rayStopRenderingButton->setHidden(true);
+
+            // Enable the UI again
+            setAllEnabled(true);
+        }
     }
 }
 
@@ -462,7 +491,19 @@ void MainWindow::clearImage()
 
 void MainWindow::revertImage()
 {
-    ui->canvas2D->revertImage();
+    // ui->canvas2D->revertImage();
+    Cloth cloth(10, 8);
+    cloth.massAt(0, 0).setFixed(true);
+    cloth.massAt(0, 7).setFixed(true);
+    // cloth.massAt(0, 0).translate(glm::vec3(-2, 0, 0));
+    // cloth.massAt(0, 44).translate(glm::vec3(2, 0, 0));
+    for (int i = 0; i < 192; i++)
+    {
+        cloth.addForce(glm::vec3(0, -0.2, 0) * 0.25f);
+        cloth.addWindForce(glm::vec3(0.5, 0, 0.2) * 0.25f);
+        cloth.step();
+        cloth.toObj("/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data/cloth/" + std::to_string(i) + ".obj");
+    }
 }
 
 void MainWindow::setCameraAxisX() {

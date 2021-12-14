@@ -45,6 +45,9 @@ RayScene::RayScene(Scene &scene) :
             case PrimitiveType::PRIMITIVE_MESH:
                 m_ishapes.push_back(std::make_unique<MeshIShape>(primitive.meshfile));
                 break;
+            case PrimitiveType::PRIMITIVE_CLOTH:
+                m_ishapes.push_back(std::make_unique<MeshIShape>(primitive.meshfile + std::to_string(scene.getFrame()) + ".obj"));
+                break;
             default:
                 m_ishapes.push_back(std::make_unique<EmptyIShape>());
         }

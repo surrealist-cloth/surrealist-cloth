@@ -24,7 +24,8 @@ enum class PrimitiveType {
     PRIMITIVE_CYLINDER,
     PRIMITIVE_TORUS,
     PRIMITIVE_SPHERE,
-    PRIMITIVE_MESH
+    PRIMITIVE_MESH,
+    PRIMITIVE_CLOTH
 };
 
 // Enumeration for types of transformations that can be applied to objects, lights, and cameras.
