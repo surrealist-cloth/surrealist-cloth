@@ -403,7 +403,7 @@ void MainWindow::renderImage() {
             for (int i = 0; i < 600; i++) {
                 glScene->setFrame(i);
                 ui->canvas2D->setScene(new RayScene(*glScene));
-                QSize outputSize(1920, 1080);
+                QSize outputSize(RENDER_IMAGE_WIDTH, RENDER_IMAGE_HEIGHT);
                 CS123SceneCameraData camera;
                 std::vector<RGBA> output(outputSize.width() * outputSize.height());
                 m_sceneParser->getCameraData(camera);
