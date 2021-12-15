@@ -1,0 +1,135 @@
+<scenefile>
+	<globaldata>
+		<diffusecoeff v="0.5"/>
+		<specularcoeff v="0.5"/>
+		<ambientcoeff v="0.5"/>
+	</globaldata>
+
+	<cameradata>
+		<pos x="0" y="2" z="9.10"/>
+		<up x="0" y="0.5" z="0"/>
+		<focus x="0" y="0" z="0"/>
+		<heightangle v="30"/>
+	</cameradata>
+
+	<lightdata>
+		<id v="0"/>
+		<color r="0.5" g="0.5" b="0.5"/>
+		<position x="10" y="10" z="10"/>
+	</lightdata>
+
+	<lightdata>
+		<id v="1"/>
+		<color r="0.3" g="0.3" b="0.3"/>
+		<position x="0" y="10" z="0"/>
+	</lightdata>
+
+	<object type="tree" name="root">
+        
+		<transblock> <!-- floor -->
+			<translate x="0" y="-0.6" z="0"/>
+			<scale x="15.7" y="0.2" z="25"/>
+			<object type="primitive" name="cube" >
+				<texture file="/Users/dakis/Documents/surrealist-cloth/data/image/cheese.png" u="1" v="1"/>
+				<diffuse r="0.30" g="0.20" b="0.00"/>
+				<blend v="0.1"/>
+			</object>
+		</transblock>
+        
+        <transblock> <!-- background -->
+            <translate x="0" y="1.25" z="-15"/>
+            <scale x="17.48" y="4" z="1"/>
+            <object type="primitive" name="cube" >
+                <texture file="/Users/dakis/Documents/surrealist-cloth/data/image/dali_background.png" u="1" v="1"/>
+                <diffuse r="0.30" g="0.20" b="0.00"/>
+                <blend v="1"/>
+            </object>
+        </transblock>
+        
+        <transblock> <!-- foregound Block -->
+            <translate x="-1.8" y=".1" z="4.9"/>
+            <scale x="1.5" y="1.2" z="4"/>
+            <object type="primitive" name="cube" >
+                <texture file="/Users/dakis/Documents/surrealist-cloth/data/image/paint_texture.png" u="1" v="1"/>
+                <material type="metal"/>
+                <diffuse r="1" g=".95" b=".3"/>
+                <blend v="1"/>
+            </object>
+        </transblock>
+        
+        
+        <transblock> <!-- tree trunk2 -->
+            <translate x="-1.7" y="1.3" z="3.5"/>
+            <scale x=".25" y="1.4" z=".25"/>
+            <object type="primitive" name="cylinder" >
+                <texture file="/Users/dakis/Documents/surrealist-cloth/data/image/bark_dali.png" u="1" v="1"/>
+                <blend v="1"/>
+            </object>
+        </transblock>
+        
+        <transblock> <!-- tree branch -->
+            <translate x="-1" y="1.5" z="3.5"/>
+            <rotate x="0" y="0" z="1" angle="110"/>
+            <scale x=".1" y="1.4" z=".1"/>
+            <object type="primitive" name="cylinder" >
+                <texture file="/Users/dakis/Documents/surrealist-cloth/data/image/bark_dali.png" u="1" v="1"/>
+                <blend v="1"/>
+            </object>
+        </transblock>
+        
+        <transblock>
+            <translate x="-0.8" y="0.2" z="-0.8"/>
+            <object type="primitive" name="sphere" >
+                <material type="metal"/>
+                <ambient r="0" g="0" b="0"/>
+                <diffuse r="0.7" g="0.7" b="0.7"/>
+                <reflective r="0.8" g="0.8" b="0.8"/>
+                <roughness v="0.02"/>
+            </object>
+        </transblock>
+        
+        <transblock>
+            <translate x="0" y="0" z="-4"/>
+            <object type="primitive" name="cube" >
+                <material type="metal"/>
+                <ambient r="0" g="0" b="0"/>
+                <diffuse r="0.7" g="0.7" b="0.7"/>
+                <reflective r="0.8" g="0.8" b="0.8"/>
+                <roughness v="0.02"/>
+            </object>
+        </transblock>
+        
+        <transblock>
+            <translate x="0" y="0" z="-4"/>
+            <object type="primitive" name="cube" >
+                <material type="metal"/>
+                <ambient r="0" g="0" b="0"/>
+                <diffuse r="0.7" g="0.7" b="0.7"/>
+                <reflective r="0.8" g="0.8" b="0.8"/>
+                <roughness v="0.0"/>
+            </object>
+        </transblock>
+            
+
+
+        
+
+		<transblock>
+			<translate x="0.8" y="0" z="0.8"/>
+			<object type="primitive" name="cylinder" >
+				<reflective r="0.9" g="0.9" b="0.9"/>
+				<diffuse r="1.0" g="1.0" b="1.0"/>
+				<shininess v="30"/>
+				<specular r="1.0" g="1.0" b="1.0"/>
+			</object>
+		</transblock>
+		<transblock>
+			<translate x="-0.8" y="0" z="0.8"/>
+			<object type="primitive" name="cone" >
+				<texture file="/Users/dakis/Documents/surrealist-cloth/data/image/cheese.png" u="1" v="1"/>
+				<blend v="1.0"/>
+			</object>
+		</transblock>
+	</object>
+
+</scenefile>
