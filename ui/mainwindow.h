@@ -9,8 +9,8 @@
 #define DEFAULT_FILE_DIRECTORY "/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data"
 #define CLOTH_OUTPUT_DIRECTORY "/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data/cloth/"
 #define RENDER_OUTPUT_DIRECTORY "/Users/alexanderding/Google Drive/Brown 2022/CSCI 1230/surrealist-cloth/data/render/"
-#define RENDER_IMAGE_WIDTH 1920
-#define RENDER_IMAGE_HEIGHT 1080
+#define RENDER_IMAGE_WIDTH 600
+#define RENDER_IMAGE_HEIGHT 400
 
 class CS123XmlSceneParser;
 class SupportCanvas3D;

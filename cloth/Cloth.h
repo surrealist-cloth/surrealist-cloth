@@ -11,7 +11,7 @@
 class Cloth
 {
   public:
-    Cloth(int rows, int cols, float timeStep = 0.02, float width = 14, float height = 10);
+    Cloth(int rows, int cols, float timeStep = 0.02, float width = 10, float height = 10);
     ~Cloth();
     void step();
     void translate(const glm::vec3 &direction);

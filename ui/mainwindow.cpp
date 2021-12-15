@@ -550,19 +550,15 @@ void MainWindow::setCameraAxonometric() {
 
 void MainWindow::revertImage()
 {
-    Cloth cloth(20, 16);
+    Cloth cloth(20, 20);
     cloth.massAt(0, 0).setFixed(true);
-    cloth.massAt(0, 15).setFixed(true);
+    cloth.massAt(0, 19).setFixed(true);
     // cloth.massAt(0, 0).translate(glm::vec3(-2, 0, 0));
     // cloth.massAt(0, 44).translate(glm::vec3(2, 0, 0));
     for (int i = 0; i < 600; i++)
     {
-        cloth.addForce(glm::vec3(0, -0.2, 0) * 0.25f);
-        if (i < 300) {
-            cloth.addWindForce(glm::vec3(0.5, 0, 0.2) * 0.3f);
-        } else {
-            cloth.addWindForce(glm::vec3(-0.3, 0, -0.2) * 0.3f);
-        }
+        cloth.addForce(glm::vec3(0, -0.2, 0) * 0.35f);
+        cloth.addWindForce(glm::vec3(0.5, 0, 0.2) * 0.5f);
 
         cloth.step();
         cloth.toObj(CLOTH_OUTPUT_DIRECTORY + std::to_string(i) + ".obj");
