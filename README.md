@@ -4,9 +4,9 @@ Team: [Alex Ding](https://github.com/alexander-ding), [Dylan Hu](https://github.
 
 Final project for CSCI 1230: Introduction to Computer Graphics at Brown University, Fall 2021. 
 
-[![Demo](https://youtu.be/H0h28vbtt4U)](/readme/demo.png)
+[![Demo](/readme/demo.png)](https://youtu.be/H0h28vbtt4U)
 
-[Presentation](https://docs.google.com/presentation/d/1kA_4QKDf0gvpZKQE2aPY4IJk6JomzbflZ-nNvJjV1nE/edit?usp=sharing)
+[Demo](https://youtu.be/H0h28vbtt4U) | [Presentation](https://docs.google.com/presentation/d/1kA_4QKDf0gvpZKQE2aPY4IJk6JomzbflZ-nNvJjV1nE/edit?usp=sharing)
 
 ## Fun Photos
 
