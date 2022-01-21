@@ -1,6 +1,6 @@
 # Surrealist Cloth
 
-Team: [Alex Ding](https://github.com/alexander-ding), [Dylan Hu](https://github.com/dylanhu7), Geoffrey Hazard(https://github.com/GeoffreyHazard)
+Team: [Alex Ding](https://github.com/alexander-ding), [Dylan Hu](https://github.com/dylanhu7), [Geoffrey Hazard](https://github.com/GeoffreyHazard)
 
 Final project for CSCI 1230: Introduction to Computer Graphics at Brown University, Fall 2021. 
 
